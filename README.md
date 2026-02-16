@@ -1,6 +1,6 @@
-# Description Logics with Two Types of Definite Descriptions: Complexity, Expressiveness, and Automated Deduction (materials for the proceedings of AAAI 2026)
+# OWLeDD: a Python Library for Reasoning in Description Logic ALC Extended with Definite Descriptions 
 
-This repository contains code and data used in the paper „Description Logics with Two Types of Definite Descriptions: Complexity, Expressiveness, and Automated Deduction” contained in the proceedings of the AAAI 2026 conference. Below, we briefly describe the implementation of tableau calculus TAB<sub>ALCi</sub> that was discussed in this paper, and provide instructions for how to use the prover as well as the generator of random concepts. In the last point, we provide information about how the data used in the paper was generated and the meaning of variables contained in it.
+Below, we briefly describe the implementation of tableau calculus TAB<sub>ALCi</sub> and provide instructions for how to use the prover as well as the generator of random concepts. .
 
 ## 1. Implementation – general remarks
    ### 1.1 Introduction and main functionalities
