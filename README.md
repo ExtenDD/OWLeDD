@@ -1,6 +1,6 @@
-# OWLeDD: a Python Library for Reasoning in Description Logic ALC Extended with Definite Descriptions 
+# OWLeDD: a Python Library for Tableu Reasoning in Description Logic ALC Extended with Definite Descriptions 
 
-Below, we briefly describe the implementation of tableau calculus TAB<sub>ALCi</sub> and provide instructions for how to use the prover as well as the generator of random concepts. .
+Our library is currently available in the form of downloadable python scripts, but very soon a fool package will be available to install. At the moment, to use the package the user needs to: download all the files contained in the folder „prover”; copy the files to one folder on a local compuer; open the script „tableau”; change the folder path at the top of the script; run the script. Then all the functions from the package described below will be usable..
 
 ## 1. Implementation – general remarks
    ### 1.1 Introduction and main functionalities
@@ -15,31 +15,7 @@ Our parser was built using the Python library „Lark” (<https://github.com/la
 
 Note that parsing time has not been analysed in the paper, but it grows linearily with concept size, with the runtime of the prover for concepts with 100 atoms being approx. 0.5s, and for concepts with 200 atoms approx. 1s.
 
-  ### 1.3 Python scripts
 
-**forms.py:**
-
-This script contains the parsing mechanism as well as all definitions of the classes that encode the concepts/ formulas.
-
-The main class is „Formula”, and the others inherit from it by the Pythonic inheritance mechanism. The functions than can be applied to the formula classes are grouped into four types: the first output atoms in a formula (e.g. `atom`); the second relate to the representation of a formula (e.g. `\__str_\_`); the third is necessary to implement equality of formulas (`\__eq_\_`); functions of the fourth type reflect structural properties of the formula („e.g. `descr_global_count`).
-
-**interpretation.py:**
-
-This script contains two main classes that encode the interpratation object (which can be seen as a Kripke structure) that is built during the construction of the tableau. The first class („Interpretation”) is the intepretation itself and the second („World”) corresponds to individuals that constitute domains in description logics („Kripke worlds” in the jargon of modal logic). The definitions of the classes are built on the implementation of a graph as an adjacency map structure, introduced by Goldwasser, Goodrich, Tamassia (2013).
-
-**tableau.py:**
-
-This is the main script, which defines the `DL_Tableau` object and can be used to build the tableau using the rules described in our paper. To initialize the `DL_Tableau` object, the user can enter a list of concepts, ABox and TBox in the input (at least one of them will be enough). An `initial_interpretation` is then created – a Pythonic object defined in the file „interpretation”. To build the whole tableau by applying the rules, the function `build_tableau` has to be used on the `DL_Tableau` object (note that this function was separated from building the tableau in order for our experiments to separate the time needed for parsing from the time needed to build the tableau by applying the rules). Detailed instructions as to how to use this function, and about other properties of the `DL_Tableau` object, are contained in point 2 – „Instructions for using the prover”.
-
-The tableau works by consecutively applying the rules described, individual after individual. The order of applying the rules is defined in the list `rules_to_apply` introduced in the file. If any rule is applied, rules are applied all over again, in accordance with this order. Rules themselves are functions of the intepretation, and are contained in the script „rules”. Each rule, when applied, modifies the interpretation accordingly. If a rule is non-deterministic, additional interpretation is created and added to the list `alternative_interpretation`. Each of them can be considered to be a new branch of the tableau. If an inconsistency is found in an interpretation that the prover is currently working on, one of the interpretations from `alternative_interpretation` is explored. Note that at the moment the prover simply chooses the last element from the list, no heuristic is used to choose an interpretation. Building such heuristics can be one of the aims of future research.
-
-**rules.py:**
-
-This script contains rules of the calculus TAB<sub>ALCi</sub> in the form of functions, that take the interpretation object as argument, and outputs - if the rule is applied - the modified interpretatoion and a list of additional interpretations created (if the rule is deterministic, the latter is empty).
-
-**generators.py:**
-
-This is an additional, technical script, that helps generate new individual names, and new fresh atomic concept names (both are one of the effects of applying the tableau rules), making sure that the new names have not been used so far.
 
 ## 2. Instructions for using the prover
 
@@ -151,104 +127,3 @@ When running the `tab.build_tableau()` command, an interpretation is automatical
 
 Note, however, that not always this interpretation can can be considered as a proper model! For this to be possible, additional actions would need to be taken, for example some individuals would have to be merged into one, in order for the global and local descriptions to be satisfied and some role-links would need to be added. We plan to add the feature of constructing the whole model for the satisfied inputs to our implementation soon. The printout of the interpretation includes names of the individuals followed by all the concepts satisfied by them, and then relations between individuals.
 
-## 3. Generator of random concepts
-
-As written in our paper, the generator of random concepts first builds a random binary syntax tree containing a predefined number of nodes, each corresponding to a subconcept; then, atomic concepts are randomly distributed among the leaves, binary operators (including global descriptions) among the inner nodes, and unary operators (including local descriptions) among all the nodes. The generator allows to customise the following attributes of the concept:
-
-- Number of occurrences of atoms (`no_atoms`): determines the size of the random syntax tree. It is identical to the number of leaves of the tree.
-- Number of atoms (`no_diff_atoms`): number of different atoms – a number that can range betwen 1 and the number of occurrences of atoms
-- Number of existential restrictions (`no_modal`) – number of operators of the form `Ǝ r A` or `~Ǝ r A`. If this operator is set to _n_, then _n_ existential restrictions are randomly distributed between all the subconcepts.
-- Number of local descriptions (`no_LD`) – number of operators of the form `i.A` or `~i.A`. If this operator is set to _n_, _n_ local descriptions are randomly distributed between all the subconcepts.
-- Number of global descriptions (`GD_count`) – number of operators of the form `iA.B` or `~i A.B`. If this operator is set to _n_, _n_ local descriptions are randomly distributed among the inner nodes of the syntax tree.
-- Chance of a binary connective to be a global description (`GD_chance`): this is a parameter that can be set instead of `GD_count`. If this is done, for each inner node of the syntax tree, the binary connective associated with that tree has chance of `GD_chance` of being a global description. If both `GD_count` and `GD_chance` are given in the input, only `GD_count` is used.
-- Chance of any subconcept being a negation (`neg_chance`).
-
-**In order to use the generator:**
-
-- Make sure you have installed the Python libraries „numpy” and „random”
-- Run the file script „random_concept_generator.py”
-- Use the function `random_ALCi_concept_str`, for example:
-```
-random_ALCi_concept_str(no_atoms = 6,
-                        no_diff_atoms = 4,
-                        no_modal = 3,
-                        no_LD = 2,
-                        GD_chance = None,
-                        GD_count = 3,
-                        neg_chance = 0.5)
-```
-The generator outputs the representation of a concept as a string of characters – in the form that can be then parsed by our parser described above.
-
-Note that the generator produces single random concepts. The random concepts produced that way contain only one role type, and do not produce random ABox or TBox objects.
-
-## 4. Information about the data generated for results
-
-The data used in the paper has been generated using the script „data_generation.py”. To use it, one has to:
-
-- Make sure you have installed the Python libraries „numpy”, „pandas”, „math”, „timeit” and „random”,
-- set two parameters in the beginning of the script: `random_seed` and `no_formulas` (number of formulas/concepts to be generated),
-- assign a value to the variable `no_atoms` – this will set the size of each generated concept separately. If it is chosen randomly (as in the current script), each generated concept will have a random size in a given range.
-- fill the arguments of the function `random_ALCi_concept_str`, in order to determine what type of concepts should be contained in the data (note that the argument `no_atoms` is set before executing the function),
-- Name the datafile(s) that appear in the output. Current script produces two files – an Excel file and a csv. file
-
-For our paper we generated 7 datasets: 3 datasets with only global descriptions, 3 with only local descriptions, and one dataset without descriptions. For _k_ being the number of binary operators in a concept, the first three datasets contain 0.1\* _k_, 0.3\* _k_, and 0.5\* _k_ global descriptions, respectively, whereas the next three datasets contain 0.1\* _k_, 0.3\* _k_, and 0.5\* _k_ local descriptions. Below, those six datasets will be referred to as GD_0.1, GD_0.3, GD_0.5, LD_0.1, LD_0.3, LD_0.5. The dataset without descriptions will be referred to as NoDesc. Note that the datasets, which are also included in this repository, are named using the same names.
-
-For each of the 7 datasets, the following parameters were constant:
-
-- `no_diff_atoms = ceil(no_atoms/2)`
-- `neg_chance = 0.5`
-- `no_modal = ceil((2\*no_atoms-1)\*0.3)`
-- `GD_chance = None`
-- `no_atoms = random.randint(10,200)`
-
-The other parameters are listed in the table below. Crucially, the table includes the random.seed needed to reproduce the random sets of concepts.
-
-| **Dataset** | **`random_seed`** | **`no_formulas`** | **`GD_count`** | **`No_LD`** |
-| --- | --- | --- | --- | --- |
-| GD_0.1 | `41`  | `150` | `ceil(0.1\*(no_atoms-1))` | `0`   |
-| GD_0.3 | `33`  | `150` | `ceil(0.3\*(no_atoms-1))` | `0`   |
-| GD_0.5 | `30`  | `150` | `ceil(0.5\*(no_atoms-1))` | `0`   |
-| LD_0.1 | `19`  | `150` | `0`   | `ceil(0.1\*(no_atoms-1))` |
-| LD_0.3 | `51`  | `150` | `0`   | `ceil(0.3\*(no_atoms-1))` |
-| LD_0.5 | `23`  | `150` | `0`   | `ceil(0.5\*(no_atoms-1))` |
-| NoDesc | `50`  | `200` | `0`   | `0`  |
-
-Note that, for example, ceil(0.1\*(no_atoms-1)) is an exact Python command, and the function „ceil” is the mathematical function „ceiling” (taking a real number _x_ as argument, and returning the smallest integer no less than _x_).
-
-The variables in the dataset have the following meaning:
-
-| **Formula** | **Formula in a string format (ready to be parsed)** |
-| --- | --- |
-| `formula2` | Formula in a string format – version 2 |
-| `no_atoms` | Number of occurrences of atoms |
-| `form_size` | Formula size (number of symbols excluding parentheses) |
-| `modal_depth` | Greatest number of existential restrictions on a single branch in the syntax tree |
-| `no_modal` | Number of existential restrictions |
-| `modal_share` | `no_modal` / number of subformulas (nodes in the syntax tree) |
-| `time_parsing` | parsing time |
-| `time_tableau_min` | Time of tableau generation – minimum of generated values |
-| `time_tableau_avg` | Time of tableau generation – average of generated values |
-| `no_conj` | Number of concjunctions |
-| `no_descr_global` | Number of global descriptions |
-| `no_descr_local` | Number of local descriptions |
-| `descr_global_share` | `no_descr_global` / number of binary formulas |
-| `descr_local_share` | `no_descr_local` / number of subformulas |
-| `no_diff_atoms` | Number of different atoms |
-| `time_out` | Did the tableau generation end with a time-out (`True`/`False`) |
-| `is_satisfiable` | Is the concept satisfiable (`True`/`False`) |
-| `no_rules_applied` | Number of rules applied |
-| `no_branches_explored` | Number of branches explored |
-| `no_neg` | Number of negations |
-
-## 5. Instructions for reproducing the results presented in the paper
-
-The data analysis and results, as presented in our paper, were prepared using the programming language R. The code used to generate the results and the chart, using the data visualization package „ggplot2”, is also available („generation_of_results.R”). To generate the results, one should:
-
-- Generate the data using the appropriate random.seeds and other parameters, using the Python scripts described above
-- Run the R script, which reads the data, transforms it, and creates the table and chart
-
-## 6. References
-
-- Mathesis library <https://github.com/DigitalFormalLogic/mathesis>
-- Lark library <https://github.com/lark-parser/lark>
-- M.H. Goldwasser, M.T. Goodrich, R. Tamassia 2013: Data Structures & Algorithms in Python, Wiley 2013.
