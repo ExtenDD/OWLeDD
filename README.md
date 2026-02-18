@@ -1,8 +1,22 @@
 # OWLeDD: a Python Library for Tableu Reasoning in Description Logic ALC Extended with Definite Descriptions 
 
-Our library is currently available in the form of downloadable python scripts, but very soon a fool package will be available to install. At the moment, to use the package the user needs to: download all the files contained in the folder „prover”; copy the files to one folder on a local compuer; open the script „tableau”; change the folder path at the top of the script; run the script. Then all the functions from the package described below will be usable..
+OWLeDD is an implementation of tableau-based prover for description logic ALC with two types of operators for definite descriptions. 
 
-## 1. Implementation – general remarks
+It can be used to:
+- check for satisfiability of single ALC concepts with (or without) definite descriptions
+- load ontologies with expressivity of ALC in functional syntax and check their consistency
+- create simple ontologies within Pythonic syntax and check for their consistency
+- check consistency of ALC concepts with respect to the input ontologies
+
+
+Our library is currently available in the form of downloadable python scripts, but very soon a full package will be available to install. At the moment, to use the package the user needs to: download all the files contained in the folder „prover”; copy the files to one folder on a local compuer; open the script „tableau”; change the folder path at the top of the script; run the script. Then all the functions from the package described below will be usable..
+
+## 1. Introduction
+   ### 1.1 What are definite descriptions?
+
+Definite descriptions (DDs) are expressions of the form "the *X* such that *P(X)*", which allow one to refer to objects by means of their unique properties. 
+Our prover allows to express two kinds of DDs: "local" DDs make it possible to express concepts such as `highest peak in the world', whereas "global" DDs can capture assertions such as "the highest peak in the world is located in the Himalayas". In contex of description logic and OWL ontologies DDs can for example enforce that a given concept does (or does not) have a singleton extension.
+   
    ### 1.1 Introduction and main functionalities
 
 The implementation, from now on called the „TAB<sub>ALCi</sub> prover”, or simply „prover” was written in the programming language Python 3.10. The code is divided between 5 files, which we describe below. Note that the code itself follows the jargon of classical and modal logic in referring to „formulas” rather than „concepts”.
