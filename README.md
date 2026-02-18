@@ -58,7 +58,7 @@ both modes below.
   - `'Tall ⊔ Pretty'`
 - Subsumption of two concept can be built using either of the two strings of symbols "->" or "⊑". For example:
   - `'A -> B'`
-  - `'Tall ⊑ ~Fat'`
+  - `'Flower ⊑ ~Man'`
 - The existential quantifier can be built either using the symbol `Ǝ` or the string of symbols `*E`. The general quantifier can be built either using the symbol `∀` or the string of symbols `*A`. Roles have to start with small letters, followed by capital letters, small letters, digits or the symbol `_` (as with concepts, they can also be precede by the symbol ":"). The whole concept consists of three parts that have to be put in the following order, with spaces between them:
 \
 \
