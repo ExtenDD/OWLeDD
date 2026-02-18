@@ -28,11 +28,15 @@ Starting the prover comes down to initialising an instance of the DL_Tableau cla
 tab = DL_Tableau(ontology = ontology_file.owl,
                  concept = ['Student ⊓ Tall', 'i.Bob', 'Ǝ isStudentOf John'],
                  ABox = {'Robert': 'Man'},
-                 RBox = {'Neighbour': ['Ana', 'Robert']},
+                 RBox = {'neighbour': ['Ana', 'Robert']},
                  TBox = ['Student ⊑ Man']))
 ```
 
-The input can contain any subset of those 5 main arguments. Below we explain how to use them, and what additional arguments can passed when creating a DL_Tableau object.
+When a DL_Tableau object is initialised, a tableau is built and the user can access various types of information about it.
+
+The input can contain any subset of those 5 main arguments. Below we explain how to use them, what additional arguments can passed when creating a DL_Tableau object, and what information about the built tableau can be accessed. 
+
+
 
 ## Parsing
 
@@ -42,6 +46,8 @@ The second mode is reserved for the situation, in which the input contains an on
 both modes below.
 
 ### Entering concepts using the default parsing mode
+
+For convenience, the parser allows using both description logic "square" syntax, and a syntax that is more easy to type from keybord:
 
 - Atoms have to start with a capital letter, after which capital letters, small letters, digits, or the symbol `_` can follow. Before such an atom string, the symbol ":" can also optionally appear (which is often the case in ontologies). For example:
   - `'A'`
@@ -87,15 +93,22 @@ For example:
 For example:
   - `'i.Rich'`
   - `'~i.XaV'`
+\
+\
 
-**Creating the tableau object**
+Names of individuals can be any strings of symbols. 
 
-In order to create the `DL_Tableau` object, the user has to give 4 arguments as input (note that what is usually taken as an ABox, is here divided into an ABox and an RBox). Note that all concept, individual and role names should be put between double or single quotation marks, as used in Python (' or ")
+Here is another example of the four arguments can be used:
 
-1. concept: this can be a concept or a list of concepts written in a Pythonic way, for example:
+ 
+### Building a simple ontology using a Pythonic syntax
+
+You can check satisfiability of concepts or build a simple ontology from a code editor using a Pythonic syntax. To do that, initalize a DL_Tableau object with any of the 4 arguments as described below:
+
+1. concept: this can be a concept or a list of concepts, for example:
     - `concept = 'A'`
     - `concept = ['U&B', 'i.Y']`
-2. ABox: this should be a Pythonic dictionary, with individual names as keys, and as values: single concepts or lists of concepts that are satisfied by the individual. Note that individual names can be any strings of symbols. For example
+2. ABox: this should be a Pythonic dictionary, with individual names as keys, and as values: single concepts or lists of concepts that are satisfied by the individual, for example:
     - `ABox = {'individual1': ['B', 'C'], 'individual2': 'A'}`
     - `ABox = {'Mark' : ['Tall', 'Smart']}`
 3. RBox: this should be a Pythonic dictionary, with role names as keys, and as values – pairs of individuals that are connected by the role, with the origin coming first and the destination second. Each pair of individuals should be a Pythonic list, and many pairs correspond to a list of lists that are pairs. For example:
@@ -105,14 +118,30 @@ In order to create the `DL_Tableau` object, the user has to give 4 arguments as 
     - `TBox = 'A -> B'`
     - `TBox = ['Tall' -> 'Pretty', 'Smart' -> 'Rich']`
 
-Here is an example of a complete input, in which all 4 arguments are given one after another, after commas:
+Here is another example of a complete input, in which all 4 arguments are given one after another, after commas:
+```
+tab = DL_Tableau(concept = ['C1 ⊓ :T', 'i C2.C3'],
+                 ABox = {'Robert': ''*A role1 S2''},
+                 RBox = {'role2': ['ind1', 'ind$%@']},
+                 TBox = ['C1 ⊑ C2&C5']))
+```
 
-```
-tab = DL_Tableau(concept = ['Man', 'i.Bob', 'Nice & Clean'],
-                 ABox = {'Robert': 'Man', 'Ana': 'Nice'},
-                 RBox = {'is_friend': [['Robert', 'Ana'], ['Robert', 'John']], 'neighbour': [['Ana', 'Robert']]},
-                 TBox=['Man -> Nice', '~Clean -> ~Nice'])
-```
+
+
+### Loading an ontology from a file 
+
+You can load an ontology from an "owl" file, using the "ontology" argument. At the moment, the OWLeDD accepts only ontologies in functional syntax and with a limited number of OWL constructs:
+
+- Declaration (of a Class, ObjectProperty and NamedIndividual)
+- ClassAssertion
+- ObjectPropertyAssertion
+- SubClassOf
+- EquivalentClasses
+- DisjointClasses
+
+
+
+
 
 We have saved our tableau object in the variable „tab”. In what follows, we will show what functions can be applied to the tableau encoded with this name.
 
