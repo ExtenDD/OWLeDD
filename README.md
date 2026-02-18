@@ -2,6 +2,7 @@
 
 OWLeDD is an implementation of tableau-based prover for description logic ALC with two types of operators for definite descriptions. 
 
+
 It can be used to:
 - check for satisfiability of single ALC concepts with (or without) definite descriptions
 - load ontologies with expressivity of ALC in functional syntax and check their consistency
@@ -11,48 +12,54 @@ It can be used to:
 
 Our library is currently available in the form of downloadable python scripts, but very soon a full package will be available to install. At the moment, to use the package the user needs to: download all the files contained in the folder „prover”; copy the files to one folder on a local compuer; open the script „tableau”; change the folder path at the top of the script; run the script. Then all the functions from the package described below will be usable..
 
-## 1. Introduction
-   ### 1.1 What are definite descriptions?
+## What are definite descriptions?
 
 Definite descriptions (DDs) are expressions of the form "the *X* such that *P(X)*", which allow one to refer to objects by means of their unique properties. 
 Our prover allows to express two kinds of DDs: "local" DDs make it possible to express concepts such as `highest peak in the world', whereas "global" DDs can capture assertions such as "the highest peak in the world is located in the Himalayas". In contex of description logic and OWL ontologies DDs can for example enforce that a given concept does (or does not) have a singleton extension.
-   
-   ### 1.1 Introduction and main functionalities
-
-The implementation, from now on called the „TAB<sub>ALCi</sub> prover”, or simply „prover” was written in the programming language Python 3.10. The code is divided between 5 files, which we describe below. Note that the code itself follows the jargon of classical and modal logic in referring to „formulas” rather than „concepts”.
-
-Our prover allows to introduce single concepts, ABox and TBox, each of the three being optional. We describe in detail how to use it below, in point 2: „Instructions for using the prover”. Note that in the paper we only report usage of the prover as applied to single concepts. Note also that the prover allows using unrestricted number of roles, even though our experiments were only applied for concepts with one role.
-
-  ### 1.2 Parser
-
-Our parser was built using the Python library „Lark” (<https://github.com/lark-parser/lark>). The parser accepts a string object that is an initial representation of the concept, and parses it into an appropriate Pythonic class that further represents the concept in the prover. The structure of the those classes was built in a similar way as in the library „Mathesis”, some parts of our code are directly inspired by it (see <https://github.com/DigitalFormalLogic/mathesis>). See point 2 below for detailed instructions of how to use the parser.
-
-Note that parsing time has not been analysed in the paper, but it grows linearily with concept size, with the runtime of the prover for concepts with 100 atoms being approx. 0.5s, and for concepts with 200 atoms approx. 1s.
 
 
+## How to use the prover
 
-## 2. Instructions for using the prover
+We will refer to our implementation as to „TAB<sub>ALCi</sub> prover”, or simply „prover”. Below we explain how to use it, and next we shortly describe the contents of the Python scripts made available in this repository.
 
-The main script in the prover is „tableau.py”, which has to be first run. Note that this script imports the scripts „forms.py”, „interpretation.py” and `rules.py' (the latter also imports „generators.py”), so all the scripts need to be in the same folder. For the script to work, the following libraries have to be installed as well: „lark”, „re”, „time” and „copy”. When the script „tableau” is run, one can build the `DL_Tableau` object. To do that, first it has to be explained how concepts should be constructed:
+Starting the prover comes down to initialising an instance of the DL_Tableau class - the central class in the implementation. Here is a simple example:
 
-**Concepts**
+```
+tab = DL_Tableau(ontology = ontology_file.owl,
+                 concept = ['Student ⊓ Tall', 'i.Bob', 'Ǝ isStudentOf John'],
+                 ABox = {'Robert': 'Man'},
+                 RBox = {'Neighbour': ['Ana', 'Robert']},
+                 TBox = ['Student ⊑ Man']))
+```
 
-In order for the parser to properly parse the concepts, they have to built in the following way:
+The input can contain any subset of those 5 main arguments. Below we explain how to use them, and what additional arguments can passed when creating a DL_Tableau object.
 
-- Atoms have to start with a capital letter, after which capital letters, small letters, digits, or the symbol `_` can follow (no other special symbols are allowed). For example:
+## Parsing
+
+OWLeDD contains a parser for description logic concepts and OWL ontologies, which has been created using the Python library [lark](https://github.com/lark-parser/lark).
+There are two parsing modes. In the first mode, only restricted syntax can be introduced. This is default, and can be used for any types of input.
+The second mode is reserved for the situation, in which the input contains an ontology which contains concepts and roles expressed in any other type of syntax. We describe 
+both modes below.
+
+### Entering concepts using the default parsing mode
+
+- Atoms have to start with a capital letter, after which capital letters, small letters, digits, or the symbol `_` can follow. Before such an atom string, the symbol ":" can also optionally appear (which is often the case in ontologies). For example:
   - `'A'`
   - `'B_12'`
-  - `'Tall'`
+  - `':Tall'`
 - Negation of a concept can be built using either of the symbols `~` or `¬`. For example:
   - `'~F3'`
   - `'¬X'`
 - Conjunction of two concepts can be built using either of the symbols `&` or `Π`. For example:
   - `'F & R1'`
-  - `'Tall Π Pretty'`
-- Subsumption of two concept can be built using either of the two strings of symbols "->" or "-:". For example:
+  - `'Man Π Student'`
+- Disjunction of two concepts can be built using either of the symbols `&` or `Π`. For example:
+  - `'F | R1'`
+  - `'Tall ⊔ Pretty'`
+- Subsumption of two concept can be built using either of the two strings of symbols "->" or "⊑". For example:
   - `'A -> B'`
-  - `'Tall -: ~Fat'`
-- The quantifiers can be built either using the symbol `Ǝ` or the string of symbols `*E`. Roles have to start with small letters, followed by capital letters, small letters, digits or the symbol `_`. The whole concept consists of three parts that have to be put in the following order, with spaces between them:
+  - `'Tall ⊑ ~Fat'`
+- The existential quantifier can be built either using the symbol `Ǝ` or the string of symbols `*E`. The general quantifier can be built either using the symbol `∀` or the string of symbols `*A`. Roles have to start with small letters, followed by capital letters, small letters, digits or the symbol `_` (as with concepts, they can also be precede by the symbol ":"). The whole concept consists of three parts that have to be put in the following order, with spaces between them:
 \
 \
 `[quantifier] [role] [concept]`
@@ -61,7 +68,8 @@ In order for the parser to properly parse the concepts, they have to built in th
 Note that the symbol and rules for universal quantification are not applied at the moment. Instead, please simply use negated existantial quantifiers. For example:
   - `'*E role_1 A'`
   - `'Ǝ r R5'`
-  - `'~*E likes Tall'`
+  - `'∀ likes Tall'`
+  - `'~*A isStudentOf John'`
 - Global descriptions are built in following way (spaces between the dot and the concept names are not necessary):
 \
 \
