@@ -36,7 +36,7 @@ The input can contain any subset of those 5 main arguments. Below we explain how
 
 ## Parsing
 
-OWLeDD contains a parser for description logic concepts and OWL ontologies, which has been created using the Python library [lark](https://github.com/lark-parser/lark).
+OWLeDD contains a parser for description logic concepts and OWL ontologies, which has been created using the library [lark](https://github.com/lark-parser/lark).
 There are two parsing modes. In the first mode, only restricted syntax can be introduced. This is default, and can be used for any types of input.
 The second mode is reserved for the situation, in which the input contains an ontology which contains concepts and roles expressed in any other type of syntax. We describe 
 both modes below.
@@ -53,10 +53,10 @@ both modes below.
 - Conjunction of two concepts can be built using either of the symbols `&` or `Π`. For example:
   - `'F & R1'`
   - `'Man Π Student'`
-- Disjunction of two concepts can be built using either of the symbols `&` or `Π`. For example:
+- Disjunction of two concepts can be built using either of the symbols `&` or `⊔`. For example:
   - `'F | R1'`
   - `'Tall ⊔ Pretty'`
-- Subsumption of two concept can be built using either of the two strings of symbols "->" or "⊑". For example:
+- Subsumption of two concept can be built using the string of symbols "->" or the symbol "⊑". For example:
   - `'A -> B'`
   - `'Flower ⊑ ~Man'`
 - The existential quantifier can be built either using the symbol `Ǝ` or the string of symbols `*E`. The general quantifier can be built either using the symbol `∀` or the string of symbols `*A`. Roles have to start with small letters, followed by capital letters, small letters, digits or the symbol `_` (as with concepts, they can also be precede by the symbol ":"). The whole concept consists of three parts that have to be put in the following order, with spaces between them:
@@ -65,10 +65,9 @@ both modes below.
 `[quantifier] [role] [concept]`
 \
 \
-Note that the symbol and rules for universal quantification are not applied at the moment. Instead, please simply use negated existantial quantifiers. For example:
   - `'*E role_1 A'`
   - `'Ǝ r R5'`
-  - `'∀ likes Tall'`
+  - `'∀ :likes Tall'`
   - `'~*A isStudentOf John'`
 - Global descriptions are built in following way (spaces between the dot and the concept names are not necessary):
 \
