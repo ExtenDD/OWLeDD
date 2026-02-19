@@ -1,17 +1,27 @@
 import forms
 
 
-
-#PERFORM ABSORPTION ON THE UNFOLDED PART OF TBOX
 def absorb_unfolded_Tbox(Tbox_unfold_subs,
                          Tbox_fold_subs,
                          Tbox_fold_eq,
                          Tbox_fold_subs_conj,
                          Tbox_fold_subs_neg,
                          Tbox_fold_subs_ex_restr,
-                     #    Tbox_fold_atoms_all,
                          graph_Tbox_atoms):
-    
+    """ applies absorption optimalisation to TBox
+
+        Argument:
+            Tbox_unfold_subs: working data structure representing unfoldable Tbox
+            Tbox_fold_subs:  working data structure representing subsumptions in foldable Tbox
+            Tbox_fold_eq: working data structure representing equivalences in foldable Tbox
+            Tbox_fold_subs_conj:  working data structure representing subsumptions in foldable Tbox, with conjunctions of atoms on the left side of the axiom
+            Tbox_fold_subs_neg:  working data structure representing subsumptions in foldable Tbox, with negation of an atom on the left side of the axiom
+            Tbox_fold_subs_ex_restr:  working data structure representing subsumptions in foldable Tbox, with existential restriction on the left side of the axiom
+            graph_Tbox_atoms:  working data structure representing the dependency graph used to check if Tbox is acyclic
+
+        Output:
+            the output is the same set of objects as in the input, modified
+    """    
     
     for pair in list(Tbox_unfold_subs):
 
@@ -29,8 +39,6 @@ def absorb_unfolded_Tbox(Tbox_unfold_subs,
             for form in conj_set_non_atoms:
                 x = set(form.atom_symbols) 
                 conj_set_non_atoms_str.update(x)
-
-           # print(conj_set_atoms)
 
             if len(conj_set_atoms)==0:
                 continue
@@ -86,14 +94,6 @@ def absorb_unfolded_Tbox(Tbox_unfold_subs,
                                                  forms.Negation(forms.Conjunction(forms.Negation(pair[1]),
                                                                                   pair[0])))})
 
-                #update the graph of Tbox atoms to be used in checking if Tbox is cyclic
-#                for atom_str in conj_set_atoms_str:
-#                    if pair[0].sub2.formula_string() in graph_Tbox_atoms.keys():
-#                        graph_Tbox_atoms[pair[0].sub2.formula_string()] = graph_Tbox_atoms[pair[0].sub2.formula_string()].union(set(pair[1].atom_symbols))
-#                    else:
-#                        graph_Tbox_atoms.update({pair[0].sub2.formula_string(): set(pair[1].atom_symbols)})
-                                                                
-                
             Tbox_unfold_subs.remove(pair)
     
 
@@ -103,7 +103,6 @@ def absorb_unfolded_Tbox(Tbox_unfold_subs,
            Tbox_fold_subs_conj,
            Tbox_fold_subs_neg,
            Tbox_fold_subs_ex_restr,
-        #   Tbox_fold_atoms_all,
            graph_Tbox_atoms)
 
 
@@ -111,29 +110,29 @@ def absorb_unfolded_Tbox(Tbox_unfold_subs,
 
 
 
-#CHECK UNIQUENESS OF TBOX
-
-#idziemy po self.Tbox_fold_eq
-#jesli 
-
 def ensure_uniqueness(Tbox_fold_eq,
                       Tbox_unfold_subs,
-                    #  Tbox_fold_atoms_all,  #?????????????????
                       graph_Tbox_atoms):
+    """ ensures that no atoms appears twice on the left hand side of an equivalence axiom
+
+        Argument:
+            Tbox_unfold_subs: working data structure representing unfoldable Tbox
+            Tbox_fold_eq: working data structure representing equivalences in foldable Tbox
+            graph_Tbox_atoms:  working data structure representing the dependency graph used to check if Tbox is acyclic
+
+        Output:
+            the output is the same set of objects as in the input, modified
+    """        
 
     atoms_in_eq = set()
     
-  #  print(-1, list(Tbox_fold_eq))
     
     for pair in list(Tbox_fold_eq):
-        #print(0, pair)
         if pair[0] in atoms_in_eq:
             Tbox_fold_eq.remove(pair)
+
             #splitting the equivalence in two subsumptions and moving to the unfoldadable part
             Tbox_unfold_subs.update({(pair[0], pair[1]), (pair[1], pair[0])})
-         #   print(1, Tbox_fold_eq)
-          #  print(2, Tbox_unfold_subs)
-           # print(3, graph_Tbox_atoms)
 
             graph_Tbox_atoms[pair[0].formula_string()] = graph_Tbox_atoms[pair[0].formula_string()].difference(set(pair[1].atom_symbols))
             
@@ -142,17 +141,9 @@ def ensure_uniqueness(Tbox_fold_eq,
         
     return(Tbox_fold_eq,
            Tbox_unfold_subs,
-        #   Tbox_fold_atoms_all,
            graph_Tbox_atoms)
 
 
-
-
-
-#atoms_to_delete(tab.graph_Tbox_atoms)
-
-
-#FUNCTIONS FOR CHECKING CYCLICIYT OF TBox
 
 
 
@@ -163,9 +154,21 @@ def ensure_Tbox_acyclic(Tbox_unfold_subs,
                         Tbox_fold_subs_conj,
                         Tbox_fold_subs_neg,
                         Tbox_fold_subs_ex_restr,
-                     #   Tbox_fold_atoms_all,
                         graph_Tbox_atoms):
-    
+    """ checks if the Tbox contains cycles
+
+        Argument:
+            Tbox_unfold_subs: working data structure representing unfoldable Tbox
+            Tbox_fold_subs:  working data structure representing subsumptions in foldable Tbox
+            Tbox_fold_eq: working data structure representing equivalences in foldable Tbox
+            Tbox_fold_subs_conj:  working data structure representing subsumptions in foldable Tbox, with conjunctions of atoms on the left side of the axiom
+            Tbox_fold_subs_neg:  working data structure representing subsumptions in foldable Tbox, with negation of an atom on the left side of the axiom
+            Tbox_fold_subs_ex_restr:  working data structure representing subsumptions in foldable Tbox, with existential restriction on the left side of the axiom
+            graph_Tbox_atoms:  working data structure representing the dependency graph used to check if Tbox is acyclic
+
+        Output:
+            the output is the same set of objects as in the input, modified
+    """        
     #first, for the functions defined on the dependency graph to work correctly, we need to make sure all the atoms in a graph has a key in the dictionary graph_Tbox_atoms
 
     if len(graph_Tbox_atoms.keys()) == 0:
@@ -175,7 +178,6 @@ def ensure_Tbox_acyclic(Tbox_unfold_subs,
                Tbox_fold_subs_conj,
                Tbox_fold_subs_neg,
                Tbox_fold_subs_ex_restr,
-             #  Tbox_fold_atoms_all,
                graph_Tbox_atoms,
                0)
         
@@ -189,8 +191,6 @@ def ensure_Tbox_acyclic(Tbox_unfold_subs,
     atoms_in_cycles = atoms_to_delete(graph_Tbox_atoms)
 
     no_atoms_in_cycles = len(atoms_in_cycles)
-
-    #print(atoms_in_cycles)
 
     if no_atoms_in_cycles == 0:
         return(None)
@@ -218,12 +218,6 @@ def ensure_Tbox_acyclic(Tbox_unfold_subs,
     
             Tbox_unfold_subs.update({axiom})
     
-    #??????????????
-#    for axiom in list(Tbox_fold_ex_restr):
- #       if axiom[0].sub.formula_string() in atoms_in_cycles:
-  #          Tbox_fold_subs.remove(axiom)
-   #         Tbox_unfold_subs.update({axiom})
-
     
     return(Tbox_unfold_subs,
            Tbox_fold_subs,
@@ -231,31 +225,22 @@ def ensure_Tbox_acyclic(Tbox_unfold_subs,
            Tbox_fold_subs_conj,
            Tbox_fold_subs_neg,
            Tbox_fold_subs_ex_restr,
-         #  Tbox_fold_atoms_all,
            graph_Tbox_atoms,
            no_atoms_in_cycles)
     
     
-#wejscie: graf i wszystkie zbiory
-#konstruujemy pelny graf - z wszystkimi atomami
-
-#dostajemy liste wierzcholkow do usuniecia
-#przechodzimy przez wszystkie aksjomaty (subs, ea, conj, neg, restr)
-#jesli atomy z listy gdzies po lewej  - usuwamy aksjomat i przenosimy do unfold_subs
-
-
-
-
-
 
 
 def find_cycle_node(graph):
     """
     Detects a cycle in a directed graph.
-    Returns a node that belongs to a cycle, or None if no cycle exists.
-
-    graph: dict mapping each node to a list of neighbors
-    """
+ 
+    Argument:
+        graph: dependency graph
+        
+    Output:
+        Returns a node that belongs to a cycle, or None if no cycle exists.
+   """
     visited = set()
     in_stack = set()
 
@@ -285,15 +270,21 @@ def find_cycle_node(graph):
     return None
 
 
-#node = find_cycle_node(graph)
-#print(node)
-
-
 
 
 def reduced_graph(graph, cycle_node):
-#    graph_out = graph
-
+    """
+    Generates an updated dependency graph, with specific nodes not connected by a (directed) edge
+ 
+    Argument:
+        graph: dependency graph
+        cycle_node: a node, represented by a string
+        
+    Output:
+        updated dependeny graph
+   """
+   
+   
     del graph[cycle_node]
     
     for x, y  in graph.items():        
@@ -303,8 +294,17 @@ def reduced_graph(graph, cycle_node):
 
 
 
-def atoms_to_delete(graph):
 
+def atoms_to_delete(graph):
+    """
+    finds a node, which is responsible for a cycle
+ 
+    Argument:
+        graph: dependency graph
+        
+    Output:
+        Returns a list of atoms (strings representing them) that need to be deleted from the dependency graph to avoid cycles
+   """
     cycle_nodes_all = set()
 
     def list_of_atoms_to_delete(graph):
