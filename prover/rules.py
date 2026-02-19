@@ -1,6 +1,6 @@
 import forms
 from copy import deepcopy
-import generators
+import add_functions
 
 
 def relocate_to_new_fml_sets(formulas_dict, new_fml):
@@ -47,18 +47,11 @@ def clash_rule(interpretation):
         #number of new formulas
         no_new_fmls = len(w._formulas['new_fml_posit'] | w._formulas['new_fml_negat'])
 
-        #print(no_new_fmls)
-        
-      #  print(w._formulas['new_fml_posit'])
-       # print(w._formulas['new_fml_negat'])
-        
         
         if no_new_fmls == 0:
             continue #no new formulas, pass to the next world        
 
         else:
- 
-
             #FIRST STEP
             #apply additional rules for foldable part of TBox
             if interpretation._optimisations[1] == True:  #apply if split between foldable and unfoldable TBox is used
@@ -69,10 +62,6 @@ def clash_rule(interpretation):
                 for pair in interpretation._Tbox_fold_subs:
                     for form in new_atoms:
 
-#                        print("form", form)
- #                       print("p0", pair[0])                        
-  #                      print("p1", pair[1])
-                        
                         if form == pair[0]:
                             if isinstance(pair[1], forms.Negation):
                                 w._formulas['new_fml_negat'].update({pair[1]})
@@ -112,11 +101,8 @@ def clash_rule(interpretation):
                         else:
                             w._formulas['new_fml_posit'].update({pair[1]})
             
-
-            
             #SECOND STEP
             #here the clash rule is applied - search for pairs of contradictory formulas
-            
             if no_new_fmls>1:   #check for consistency among the new formulas         
                 fml_pairs_generator = ((new_posit_fml, new_negat_fml) for new_posit_fml in w._formulas['new_fml_posit'] for new_negat_fml in w._formulas['new_fml_negat'])         
     
@@ -154,13 +140,10 @@ def clash_rule(interpretation):
                 for form in (w._formulas['new_fml_posit'] | w._formulas['new_fml_negat']):
                     w._Tbox_unfold_list_alt = [alt for alt in w._Tbox_unfold_list_alt if form not in alt]
 
+
                 #optimisation 2: 
                 #e.g. if ~A on the branch, and {A, X} is a clause on the branch, delete A from {A, X} 
-                
                 if w._formulas['new_fml_posit'] | w._formulas['new_fml_negat']:
-                #    print("!!!!!!!!!!", w._formulas['new_fml_posit'])
-                 #   print("???????", w._formulas['new_fml_negat'])
-                  #  print("#########", w._Tbox_unfold_list_alt)
                     
                     Tbox_unfold_new = list()
                     for alt in w._Tbox_unfold_list_alt:
@@ -168,13 +151,11 @@ def clash_rule(interpretation):
                         new_alt = alt
                         for pform in w._formulas['new_fml_posit']:
                             new_alt = {form for form in new_alt if pform != forms.negate_formula(form)}
-                   #         print("$$$$$$$$$$", new_alt)
                             
                         for nform in w._formulas['new_fml_negat']:
                             new_alt = {form for form in new_alt if nform.sub != form}
     
                         if len(new_alt) ==0:  #if a clause is empty - the branch is inconsistent!
-                    #        print("zzzzzzzzzzzzzz")
                             return(interpretation, True, True, [])
                         else:
                             Tbox_unfold_new.append(alt)
@@ -240,22 +221,9 @@ def double_neg_rule(interpretation):
                 continue
             else:
 
-        # if len(w._formulas['double_neg']) == 0:
-        #     continue
-        # else:
-        #     fml = w._formulas['double_neg'].pop()
-        #     w._formulas['proc_negat'].update({fml})
-
-                #print("fml for double neg", w._world_name_str, fml)
                 relocate_to_new_fml_sets(w._formulas, fml.sub.sub)
                 w._formulas['double_neg'].remove(fml) 
                 w._formulas['proc_negat'].update({fml}) 
-        
-            #test
-            # print(w._world_name_str)
-            # print('double neg rule applied')
-            # print("doubneg:", w._formulas['double_neg'])
-            # print("pnf:", w._formulas['proc_negat'])
 
             return(interpretation, False, True, [])
             
@@ -270,36 +238,17 @@ def conjunction_rule(interpretation):
     
     for w in interpretation.worlds():
 
-#        print(w._world_name_str, " ", set.union(*w._formulas.values()))        
-        
-
-        #print ("len1:", len(w._formulas['conjunction']))        
-
-
         fml_set_copy = list(w._formulas['conjunction'])
 
         for fml in fml_set_copy:        
 
-        # if len(w._formulas['conjunction']) == 0:
-        #     continue
-        # else:
-        #     fml = w._formulas['conjunction'].pop()
-        #     w._formulas['proc_posit'].update({fml})
-
-            #print ("len2:", len(w._formulas['conjunction']))        
-
-
             v0 = fml.subs[0] in set.union(*w._formulas.values())
             v1 = fml.subs[1] in set.union(*w._formulas.values())
-
-            #print("first conjunct ", fml.subs[0], v0, v1)
 
             if v0 and v1:
                 w._formulas['conjunction'].remove(fml) 
                 w._formulas['proc_posit'].update({fml}) 
                 continue
-            
-            #print("fml for conjunction", w._world_name_str, fml)
             
             if not v0:
                 relocate_to_new_fml_sets(w._formulas, fml.subs[0])
@@ -307,19 +256,8 @@ def conjunction_rule(interpretation):
             if not v1:
                 relocate_to_new_fml_sets(w._formulas, fml.subs[1])
 
-
             w._formulas['conjunction'].remove(fml) 
             w._formulas['proc_posit'].update({fml}) 
-
-
-            #test
-#            print(w._world_name_str)
-#            print('conjunction rule applied')
-#            print("conjunct:", w._formulas['conjunction'])
-            #print("ppf:", w._formulas['proc_posit']) 
-
-            #print ("len3:", len(w._formulas['conjunction']))        
-
             
             return(interpretation, False, True, [])
 
@@ -336,8 +274,6 @@ def negated_conjunction_rule(interpretation):
     for w in interpretation.worlds():
 
         fml_set_copy = list(w._formulas['neg_conjunction'])
-
-       # print("TTTTT", fml_set_copy)            
 
         for fml in fml_set_copy:        
 
@@ -369,11 +305,11 @@ def negated_conjunction_rule(interpretation):
 
 
 
-#RULE NEGATED CONJUNCTION ----------------------------
+#RULE NEGATED CONJUNCTION - VERSION FOR SAT-BASED OPTIMISATION ----------------------------
 
 
 def negated_conjunction_rule_SAT(interpretation):
-    """ Function implementing the propositional rule for conjunction"""
+    """ Function implementing the propositional rule for conjunction in the version that performs SAT-based optimisations"""
 
     for w in interpretation.worlds():
 
@@ -390,7 +326,6 @@ def negated_conjunction_rule_SAT(interpretation):
         complexity_values = list()
         for i in range(len(clauses)):
             cl_compl = min([fml.complexity_score() for fml in clauses[i]])
-           # print(cl_compl)
             complexity_values.append(cl_compl) 
                     
         min_compl_clause = clauses[complexity_values.index(min(complexity_values))]
@@ -434,8 +369,6 @@ def negated_conjunction_rule_SAT(interpretation):
             return(interpretation, False, True, [alt_interpretation])
 
     return(interpretation, False, False, [])                   
-
-
 
 
 
@@ -526,7 +459,7 @@ def role_rule_1(interpretation):
                                                   'new_fml_negat': set()})
     
     
-            new_world._world_name_str = generators.new_world_name(interpretation)
+            new_world._world_name_str = add_functions.new_world_name(interpretation)
 
             #adding Tbox to the new world/individual 
             if interpretation._optimisations[2] == True:
@@ -565,60 +498,24 @@ def role_rule_1(interpretation):
 def role_rule_2(interpretation):
     """ Function implementing the role rule for "~Ǝr" """
     
-    
-    # for w in interpretation.worlds():
- 
-    #     print("!!!???????")
-    #     print(w._world_name_str, set.union(*w._formulas.values()))       
-
-    
     for w in interpretation.worlds():
 
         fml_set_copy = list(w._formulas['neg_diamond'])
 
         for fml in fml_set_copy:        
 
-           # print("rr2 fml found", w._world_name_str, fml)
-        # if len(w._formulas['neg_diamond']) == 0:
-        #     continue
-        # else:
-        #     fml = w._formulas['neg_diamond'].pop()
-        #     w._formulas['proc_negat'].update({fml})
-
-#            print("role rule 2 ", w, len(w._formulas['negat']))
-        
-     #               if fml in w._formulas['proc_negat']:  #if formula already processed, remove it from the "unprocessed" set
-     #                   w._formulas['negat'].remove(fml)
-     #                   print("repeating box formula removed")
-     #                   continue #...and pass to the next formula                     
-                    
                 #updating the list of concepts X, such that ~*E role X is a concept
             if fml.sub.role in w._box_subformulas.keys():
                 w._box_subformulas[fml.sub.role].update({fml})
             else:
                 w._box_subformulas[fml.sub.role] = {fml}
             
-            #print(w._box_subformulas)
-            
             #add the formula to all the related worlds                
             for v in interpretation.related_worlds(w, fml.sub.role):
                 relocate_to_new_fml_sets(v._formulas, forms.Negation(fml.sub.sub2))
-           #     print("rr2 will be applied to", v._world_name_str)
-                # if isinstance(fml.sub.sub2, forms.Negation) and isinstance(fml.sub.sub2.sub, forms.Atom):
-                #     v._formulas['proc_posit'].update({fml.sub.sub2.sub})
-                # elif isinstance(fml.sub.sub2, forms.Negation):
-                #     v._formulas['negat'].update({forms.Negation(fml.sub.sub2)})
-                # elif isinstance(fml.sub.sub2, forms.Atom):
-                #     v._formulas['proc_negat'].update({forms.Negation(fml.sub.sub2)})                    
-                # else:
-                #     v._formulas['negat'].update({forms.Negation(fml.sub.sub2)})
-
 
             w._formulas['neg_diamond'].remove(fml) 
             w._formulas['proc_negat'].update({fml})  
-        #    print(w._world_name_str)
-         #   print("neg_diamond:", w._formulas['neg_diamond'])
-          #  print("pnf:", w._formulas['proc_negat'])            
                                  
             return(interpretation, False, True, [])
     
@@ -648,10 +545,8 @@ def global_description_rule_1(interpretation):
                 if {forms.Description_Local(fml.subs[0]), fml.subs[1]} <= set.union(*v._formulas.values()):
                     w._formulas['global_desc'].remove(fml) 
                     w._formulas['proc_global_desc'].update({fml})  
-                    #print("gd1 rule applied, option 1", w._world_name_str, fml)
                     continue_to_next_formula = True
                     break
-                    #return(interpretation, False, True, [])
 
             if continue_to_next_formula:
                 continue
@@ -691,7 +586,7 @@ def global_description_rule_1(interpretation):
                     return(interpretation, False, True, [])
 
 
-            #Option 3 - else - add a new world with both formulas from the description
+            #Option 5 - else - add a new world with both formulas from the description
             new_world = interpretation.add_world({'atoms': set(),
                                                   'neg_atoms': set(),
                                                   'double_neg': set(),
@@ -710,7 +605,7 @@ def global_description_rule_1(interpretation):
                                                   'new_fml_posit': set(),
                                                   'new_fml_negat': set()})
             
-            new_world._world_name_str = generators.new_world_name(interpretation)
+            new_world._world_name_str = add_functions.new_world_name(interpretation)
 
             #adding Tbox to the new world/individual 
             if interpretation._optimisations[2] == True:
@@ -725,12 +620,6 @@ def global_description_rule_1(interpretation):
             w._formulas['global_desc'].remove(fml) 
             w._formulas['proc_global_desc'].update({fml})  
             
-            #print("gd1 rule applied, option 3", w._world_name_str, fml)
- #           print("forms in the new world")
-  #          print("new_pos_forms:", new_world._formulas['new_fml_posit'])
-            #print("ppf:", new_world._formulas['proc_posit']) 
-   #         print("new neg forms:", new_world._formulas['new_fml_negat'])
-            
             del new_world            
 
             return(interpretation, False, True, [])
@@ -744,11 +633,18 @@ def global_description_rule_1(interpretation):
 # GLOBAL DESCRIPTION RULE 2  ----------------------------
 
 
-def global_description_rule_3(interpretation):
+def global_description_rule_2(interpretation):
     """ Function implementing the rule for negated global descriptions: ~i(g) """
-
     
     for w in interpretation.worlds():
+
+        #applying the blocking condition        
+        #removing from the set 'neg_global_desc' such formulas ~@ A X that A is an appropriate set (of formulas A such that Option 3 of GD RULE 3 has already been applied to ~@ A X)
+        neg_GD_forms_to_remove = {fml for fml in w._formulas['neg_global_desc'] if fml.sub.subs[0] in interpretation._GlDesc_rule3_fml_set}
+        w._formulas['neg_global_desc'].difference_update(neg_GD_forms_to_remove) 
+        w._formulas['proc_negat'].update(neg_GD_forms_to_remove) 
+        del neg_GD_forms_to_remove
+
         
         for fml in w._formulas['neg_global_desc']:
 
@@ -777,80 +673,6 @@ def global_description_rule_3(interpretation):
 
 
 
-
-# GLOBAL DESCRIPTION CUT RULE  ----------------------------
-
-
-
-def global_description_cut_rule(interpretation):
-    """ Function implementing the cut rule for global descriptions: cut(g,i) """
-    
-    for w in interpretation.worlds():
- 
-        # print("!!!???????")
-        # print(w._world_name_str, set.union(*w._formulas.values()))       
- 
-        for fml in (w._formulas['global_desc'] | w._formulas['proc_global_desc']):   
-            #print("GD cut rule: gd found: ", w._world_name_str, fml)
-                
-            for v in interpretation.worlds():
-                #print("!!!???????")
-                #print(v._world_name_str, set.union(*v._formulas.values()))
-                #print(fml.subs[0])
-                #print(set.union(*v._formulas.values()))
-                #print((fml.subs[0] not in set.union(*v._formulas.values())))
-                if (fml.subs[0] not in set.union(*v._formulas.values())) and (forms.Negation(fml.subs[0]) not in set.union(*v._formulas.values())):
-                    
-                   # print("cut_rule world without p and ~p for @pq found: ", v._world_name_str)
-                    # print("pf:", v._formulas['posit'])
-                    # print("ppf:", v._formulas['proc_posit']) 
-                    # print("nf:", v._formulas['negat'])
-                    # print("pnf:", v._formulas['proc_negat'])            
-                    
-                    alt_interpretation = deepcopy(interpretation)
-                    
-                    #updating current interpretation
-                    relocate_to_new_fml_sets(v._formulas, fml.subs[0])
-
-                    # if isinstance(fml.subs[0], forms.Negation) and isinstance(fml.subs[0].sub, forms.Atom):
-                    #     v._formulas['proc_negat'].update({fml.subs[0]})
-                    # elif isinstance(fml.subs[0], forms.Negation):
-                    #     v._formulas['negat'].update({fml.subs[0]})
-                    # elif isinstance(fml.subs[0], forms.Atom):
-                    #     v._formulas['proc_posit'].update({fml.subs[0]})                    
-                    # else:
-                    #     v._formulas['posit'].update({fml.subs[0]})  
-                
-                 #   print("!!!!!!")
-                  #  print(v._world_name_str, v._formulas)
-                
-                    #updating the "alternative interpretation"
-                    for w_alt in alt_interpretation.worlds():
-                        if w_alt._world_name_str == v._world_name_str:
-#                            print("analysing updated world in GDcut alternative model")
-
-                            relocate_to_new_fml_sets(w_alt._formulas, forms.Negation(fml.subs[0]))
-
-                            # if isinstance(fml.subs[0], forms.Atom):
-                            #     w_alt._formulas['proc_negat'].update({forms.Negation(fml.subs[0])})
-                            # else:
-                            #     w_alt._formulas['negat'].update({forms.Negation(fml.subs[0])})
-
- #                           print("alt int 1, world:", w_alt._world_name_str, "adding ", forms.Negation(fml.subs[0]))
-                            # print("pf:", w_alt._formulas['posit'])
-                            # print("ppf:", w_alt._formulas['proc_posit']) 
-                            # print("nf:", w_alt._formulas['negat'])
-                            # print("pnf:", w_alt._formulas['proc_negat'])    
-
-                    return(interpretation, False, True, [alt_interpretation])
-
-
-    return(interpretation, False, False, [])
-
-
-
-
-
 # LOCAL DESCRIPTION RULE 1  ----------------------------
 
 
@@ -863,9 +685,6 @@ def local_description_rule_1(interpretation):
 
         for fml in fml_set_copy:        
 
-  #          print("LD1", fml, w._world_name_str, w._formulas['local_desc'], w._formulas['proc_local_desc'])
-            
-            #print("fml for local desc", w._world_name_str, fml)
             relocate_to_new_fml_sets(w._formulas, fml.sub)
             w._formulas['local_desc'].remove(fml) 
             w._formulas['proc_local_desc'].update({fml})  
@@ -884,16 +703,10 @@ def local_description_rule_2(interpretation):
     
     for w in interpretation.worlds():
 
-#        if len(w._formulas['global_desc'] | w._formulas['proc_global_desc']) == 0:
-#            continue
-#        else:
-            
-            #here we need to iterate over all formulas, to make sure each formula in each world is checked, before "rule not applied" is returned
+        #here we need to iterate over all concepts/formulas, to make sure each formula in each world is checked, before "rule not applied" is returned
         for fml in (w._formulas['local_desc'] | w._formulas['proc_local_desc']):
-        #in case of GDR2, we consider both processed and unprocessed formulas, and do not modify any of them in course of applying the rule
+        #in case of GDR2, we consider both processed and unprocessed concepts/formulas, and do not modify any of them in course of applying the rule
 
- #           print("LD2", fml, w._world_name_str)
-                
             worlds_to_be_unified_names = set()
             worlds_to_be_unified_world_copies = list()
 
@@ -903,18 +716,12 @@ def local_description_rule_2(interpretation):
                     worlds_to_be_unified_names.update({v._world_name_str})
                     worlds_to_be_unified_world_copies.append(v)
 
-            
-           # print("no of worlds to be unified", len(worlds_to_be_unified_names))
-           # print("worlds to be unified", worlds_to_be_unified_names)
-            
             if len(worlds_to_be_unified_names) < 2:
                 continue #to the next formula - rule not applied
             elif all([set.union(*z._formulas.values())==set.union(*worlds_to_be_unified_world_copies[0]._formulas.values()) for z in worlds_to_be_unified_world_copies[1:]]):
-               # print("all worlds to be unified are equal - continue to next formula")
                 continue #to the next formula - rule not applied (all the worlds have the same sets of formulas)
             else:
                 formulas_sum = set.union(*[set.union(*z._formulas.values()) for z in worlds_to_be_unified_world_copies])
-                #print("sum of all formulas: ", formulas_sum)
 
                 for v in interpretation.worlds():
                     if v._world_name_str in worlds_to_be_unified_names:
@@ -922,8 +729,7 @@ def local_description_rule_2(interpretation):
                             relocate_to_new_fml_sets(v._formulas, form)
 
 
-
-                #updating the global data structure that store information about which worlds/individuals should be "united" 
+                #updating the global data structure that store information about which worlds/individuals should be "unified" 
                 if len(interpretation._worlds_to_unify) == 0:
                     interpretation._worlds_to_unify.append(worlds_to_be_unified_names)
                 
@@ -937,9 +743,6 @@ def local_description_rule_2(interpretation):
                     if working_var == False:
                         interpretation._worlds_to_unify.update(worlds_to_be_unified_names)
                 
-                
-#                print("XXXXX", interpretation._worlds_to_unify)
-                    
                 del worlds_to_be_unified_names
                 del worlds_to_be_unified_world_copies
                 
@@ -978,7 +781,6 @@ def local_description_rule_3(interpretation):
             relocate_to_new_fml_sets(w._formulas, forms.Negation(fml.sub.sub)) 
             w._formulas['neg_local_desc'].remove(fml) 
             w._formulas['proc_negat'].update({fml})
-
 
 
             #create working variables before exploring different options            
@@ -1034,7 +836,7 @@ def local_description_rule_3(interpretation):
 
             #Option 3. The rule is applied "normally" (no blocking is applied)
             elif fr_atom_set_len ==3 or (fr_atom_set_len ==1 and fr_atom in set.union(*w._formulas.values())):
-                fresh_atom_str = generators.new_fresh_atom(alt_interpretation)
+                fresh_atom_str = add_functions.new_fresh_atom(alt_interpretation)
         
                 parser_tree = forms.parser_DL.parse(fresh_atom_str)
                 fresh_atom = forms.ToFml().transform(parser_tree)
@@ -1051,7 +853,7 @@ def local_description_rule_3(interpretation):
                                                            'neg_atoms': set(),
                                                            'double_neg': set(),
                                                            'conjunction': set(),
-                                                           'neg_conjunction': interpretation.TBox_formulas,
+                                                           'neg_conjunction': set(),
                                                            'diamond': set(),
                                                            'neg_diamond': set(),
                                                            'global_desc': set(),
@@ -1065,7 +867,7 @@ def local_description_rule_3(interpretation):
                                                            'new_fml_posit': set(),
                                                            'new_fml_negat': set()})
                 
-                new_world._world_name_str = generators.new_world_name(alt_interpretation)
+                new_world._world_name_str = add_functions.new_world_name(alt_interpretation)
                 
                 #adding Tbox to the new world/individual 
                 if alt_interpretation._optimisations[2] == True:
@@ -1095,68 +897,30 @@ def local_description_rule_3(interpretation):
 
 
 
-
 # LOCAL DESCRIPTION CUT RULE  ----------------------------
 
 
 
 def local_description_cut_rule(interpretation):
-
+    """ Function implementing the cut rule for local descriptions"""
+    
     for w in interpretation.worlds():
  
         for fml in (w._formulas['local_desc'] | w._formulas['proc_local_desc']):   
-           # print("LD cut rule: gd found: ", w._world_name_str, fml)
                 
             for v in interpretation.worlds():
-                #print("!!!???????")
-                #print(v._world_name_str, set.union(*v._formulas.values()))
-                #print(fml.subs[0])
-                #print(set.union(*v._formulas.values()))
-                #print((fml.subs[0] not in set.union(*v._formulas.values())))
                 if (fml.sub not in set.union(*v._formulas.values())) and (forms.Negation(fml.sub) not in set.union(*v._formulas.values())):
-                    
-                  #  print("cut_rule world without p and ~p for @pq found: ", v._world_name_str)
-                    # print("pf:", v._formulas['posit'])
-                    # print("ppf:", v._formulas['proc_posit']) 
-                    # print("nf:", v._formulas['negat'])
-                    # print("pnf:", v._formulas['proc_negat'])            
                     
                     alt_interpretation = deepcopy(interpretation)
                     
                     #updating current interpretation
-#                    relocate_to_new_fml_sets(v._formulas, fml.sub)
                     relocate_to_new_fml_sets(v._formulas, forms.Negation(fml.sub)) #NEW2026!!!!!!!!!!!!!!
 
-
-                    # if isinstance(fml.subs[0], forms.Negation) and isinstance(fml.subs[0].sub, forms.Atom):
-                    #     v._formulas['proc_negat'].update({fml.subs[0]})
-                    # elif isinstance(fml.subs[0], forms.Negation):
-                    #     v._formulas['negat'].update({fml.subs[0]})
-                    # elif isinstance(fml.subs[0], forms.Atom):
-                    #     v._formulas['proc_posit'].update({fml.subs[0]})                    
-                    # else:
-                    #     v._formulas['posit'].update({fml.subs[0]})  
-                
-                 #   print("!!!!!!")
-                  #  print(v._world_name_str, v._formulas)
-                
                     #updating the "alternative interpretation"
                     for w_alt in alt_interpretation.worlds():
                         if w_alt._world_name_str == v._world_name_str:
-                          #  print("analysing updated world in GDcut alternative model")
 
                             relocate_to_new_fml_sets(w_alt._formulas, fml.sub) #NEW2026!!!!!!!!!!!!!!
-
-                            # if isinstance(fml.subs[0], forms.Atom):
-                            #     w_alt._formulas['proc_negat'].update({forms.Negation(fml.subs[0])})
-                            # else:
-                            #     w_alt._formulas['negat'].update({forms.Negation(fml.subs[0])})
-
-                           # print("alt int 1, world:", w_alt._world_name_str, "adding ", forms.Negation(fml.sub))
-                            # print("pf:", w_alt._formulas['posit'])
-                            # print("ppf:", w_alt._formulas['proc_posit']) 
-                            # print("nf:", w_alt._formulas['negat'])
-                            # print("pnf:", w_alt._formulas['proc_negat'])    
 
                     return(interpretation, False, True, [alt_interpretation])
 
