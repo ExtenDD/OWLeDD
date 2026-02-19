@@ -25,7 +25,7 @@ We will refer to our implementation as to „TAB<sub>ALCi</sub> prover”, or si
 Starting the prover comes down to initialising an instance of the DL_Tableau class - the central class in the implementation. Here is a simple example:
 
 ```
-tab = DL_Tableau(ontology = ontology_file.owl,
+tab = DL_Tableau(ontology = 'ontology_file.owl',
                  concept = ['Student ⊓ Tall', 'i.Bob', 'Ǝ isStudentOf John'],
                  ABox = {'Robert': 'Man'},
                  RBox = {'neighbour': ['Ana', 'Robert']},
@@ -161,11 +161,60 @@ ontology. If the input turns out to be satisfiable, the ontology allows models i
 
 ## Functionalities of the prover 
 
+### Main functions on the "DL_Tableau" object
+
 If you save the initialized DL_Tableau object in a variable, you can access various types of information that are saved as attributes of that object, or using functions on the object. Here is the list of them (we take it that the tableau is saved in the variable "tab", as in the previous examples):
 
 **tab.satisfiability_check()**: outputs True/False, indicating if the input is satisfiable 
 **tab.nodes_count()**: outputs the number of nodes created while constructing the tableau. Corresponds to the number of rules applied 
 **tab.branches_count()**: outputs the number of branches explored while constructing the tableau. If the output is "1", no non-deteministic rule has been applied, closing the tableau after exploring one branch. 
 **tab.print_interpretation()**: prints an text interpretation of the tableau in the console, indicating individuals and atomic concepts that are satisfied in them, and list of roles that connect individuals
+
+
+### Optimalisations
+
+Note that the prover some performs some optimalisation, that can be "switched on or off" using arguments on initializing the DL_Tableau object. 
+
+- use_absorption: this defaults to "True", and uses some basic absorption techniques
+- use_foldable_TBox: this also defaults to "True", and divides TBox into foldable and unfoldable parts, that 
+- use_SAT_optimisations: corresponds to selected standard SAT-inspired optimisations, like semantic branching or Boolean constraint propagation. This defaults to "False", as it using it might not be effective on selected ontologies. 
+- use_add_disj_optimisations: this is a mechanism for selecting the concept to expand in the case of a disjunction, based on syntactic features. Each concept is assigned a score determined by its size and the types of constructors it contains.
+In particular, concepts involving DDs incur penalty scores, since the corresponding tableau rules are computationally expensive due to their non-deterministic nature. 
+
+Note that in the current implementation "use_absorption" and "use_foldable_TBox" have to be both True or both False, and similarly, "use_SAT_optimisations" and "use_add_disj_optimisations" have to be both True or both False. Below is an example of input that "turns on" the two latter optimisations:
+```
+tab = DL_Tableau(ontology = 'ontology_file.owl', 
+                 flexible_syntax = True,
+                 use_SAT_optimisations = True,
+                 use_add_disj_optimisations = True)
+```
+
+
+## Short description of available scripts
+
+### tableu
+
+This is the main script, which defines the „DL_Tableau” class and builds the tableau using the tableau rules.
+
+### forms
+
+This script contains the parsing mechanism as well as all definitions of the classes that encode the concepts. 
+Note that the strucuture of the main "Formula" class used in this script is inspired by the library [mathesis](https://github.com/ozekik/mathesis), although it is extended with classes for descriptions and existential restriction, as well as additional attributes that store syntactic properties of concepts. 
+
+### interpretation 
+
+This script contains two main classes that encode the interpretation object, which is a graph-like structure built when constructing the tableau. The first class („Interpretation”) is the intepretation itself and the second („World”) corresponds to individuals that constitute the semantics of description logics. 
+
+### rules
+
+This script contains rules of the calculus TAB<sub>ALCi</sub> in the form of functions, that take the interpretation object as argument, and outputs - if the rule is applied  - the modified interpretatoion and a list of additional interpretations created (if the rule is deterministic, this rule is empty).
+
+### add_functions
+
+This is an additional, technical script. It contains functions for parsing concepts from ontologies, or functions that generate new individual names or new fresh atom names.
+
+### TBox_optimisations
+
+This script contains functions that perform TBox optimisations and other necessary functions related with processing TBox (e.g. checking if TBox is acyclic or performing basic absorption techniques)
 
 
