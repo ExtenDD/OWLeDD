@@ -98,9 +98,7 @@ For example:
 
 Names of individuals can be any strings of symbols. 
 
-Here is another example of the four arguments can be used:
 
- 
 ### Building a simple ontology using a Pythonic syntax
 
 You can check satisfiability of concepts or build a simple ontology from a code editor using a Pythonic syntax. To do that, initalize a DL_Tableau object with any of the 4 arguments as described below:
@@ -118,19 +116,25 @@ You can check satisfiability of concepts or build a simple ontology from a code 
     - `TBox = 'A -> B'`
     - `TBox = ['Tall' -> 'Pretty', 'Smart' -> 'Rich']`
 
-Here is another example of a complete input, in which all 4 arguments are given one after another, after commas:
+Notes:
+- ABox statements are analogical to OWL "ClassAssertion" statements. However, concepts introduced in the "concept" argument are assumed to be satisfied in a new individual, not occuring in any other argument of DL_Tableau.
+- if you just use the "concept" argument, you are effectively testing satisfiability of single ALC concept (note that this is equivalent to testing satisfiability of multi-modal logic formulas, just the syntax is different)
+- "RBox" stands for what usually is considered a part of ABox  - "ObjectPropertyAssertion" OWL statements.
+- using "TBox" you can OWL statements of the types "SubClassOf" and "Equivalence" 
+
+Here is another example of a complete input with all the 4 arguments:
 ```
 tab = DL_Tableau(concept = ['C1 ⊓ :T', 'i C2.C3'],
                  ABox = {'Robert': ''*A role1 S2''},
                  RBox = {'role2': ['ind1', 'ind$%@']},
-                 TBox = ['C1 ⊑ C2&C5']))
+                 TBox = ['C1 ⊑ C2&C5', 'A ]))
 ```
 
 
 
 ### Loading an ontology from a file 
 
-You can load an ontology from an "owl" file, using the "ontology" argument. At the moment, the OWLeDD accepts only ontologies in functional syntax and with a limited number of OWL constructs:
+You can load an ontology from an "owl" file, using the "ontology" argument. At the moment, OWLeDD accepts only ontologies in functional syntax and with a limited number of OWL constructs:
 
 - Declaration (of a Class, ObjectProperty and NamedIndividual)
 - ClassAssertion
@@ -139,41 +143,29 @@ You can load an ontology from an "owl" file, using the "ontology" argument. At t
 - EquivalentClasses
 - DisjointClasses
 
-
-
-
-
-We have saved our tableau object in the variable „tab”. In what follows, we will show what functions can be applied to the tableau encoded with this name.
-
-Note, that the 4 arguments do not have to be given in this order, and that any non-empty combination of them can be given as input. After entering such input, a `DL_Tableau` object is created.
-
-After creating the `DL_Tableau`, one can use the function `initial_interpretation` to view the interpretation in the form after parsing the input. For example:
+If concept and role names do not conform to the parsing conventions named above, you need to use set an additional argument "flexible_syntax" to "True" when creating a DL_Tableu. In this case, the parser accepts any non-space string of symbols (an exception are the parenthesis symbols "(" and ")" - using them inside concept, role or individual names will likely cause paring errors). Here is an example of such input:
 ```
-tab.print_initial_interpretation()
+tab = DL_Tableau(ontology = 'ontology_file.owl',
+                 flexible_syntax = True)
 ```
-Note that the concepts from the TBox are transferred to all the individuals mentioned in the input automatically at this stage.
+If you set "flexible_syntax" to "True", you can also use the names from the ontology in the "concept", "ABox", "RBox" and "TBox" arguments. In particular, you can check if a concpet is satisfied with respect to an ontology. Here is an example of such application of the prover:
 
-**Build the tableau using the function „build_tableau”**
-
-In order to apply the rules to the tableau, the function `build_tableau` has to be used on the `DL_Tableau` object, for example:
 ```
-tab.build_tableau()
+tab = DL_Tableau(ontology = 'ontology_file.owl',
+                 concept = 'i.A',   
+                 flexible_syntax = True)
 ```
-Applying it will result in the output that contains 4 elements (this form of output is used in the experiments; we leave it that way to enable their reproducibility). They are given in the form of a tuple, its elements have the following meaning:
+In this particular application, we are checking the satisfiability of a local definite description with respect to the 
+ontology. If the input turns out to be satisfiable, the ontology allows models in which the concept 'A' has singular extension.
 
-`[0]`: did applying the tableau rules result in a time-out? True/False
 
-`[1]`: is the input satisfiable? True/False
+## Functionalities of the prover 
 
-`[2]`: number of closed branches
+If you save the initialized DL_Tableau object in a variable, you can access various types of information that are saved as attributes of that object, or using functions on the object. Here is the list of them (we take it that the tableau is saved in the variable "tab", as in the previous examples):
 
-`[3]`: number of applied rules
+**tab.satisfiability_check()**: outputs True/False, indicating if the input is satisfiable 
+**tab.nodes_count()**: outputs the number of nodes created while constructing the tableau. Corresponds to the number of rules applied 
+**tab.branches_count()**: outputs the number of branches explored while constructing the tableau. If the output is "1", no non-deteministic rule has been applied, closing the tableau after exploring one branch. 
+**tab.print_interpretation()**: prints an text interpretation of the tableau in the console, indicating individuals and atomic concepts that are satisfied in them, and list of roles that connect individuals
 
-For example, to check satisfiability, we can directly refer to the second element of the output, by typing:
-```
-tab.build_tableau()[1]
-```
-When running the `tab.build_tableau()` command, an interpretation is automatically printed out, as well as information about the satisfiability (for convenience). Those elements have been added for comparison with the version of the prover used in the experiments.
-
-Note, however, that not always this interpretation can can be considered as a proper model! For this to be possible, additional actions would need to be taken, for example some individuals would have to be merged into one, in order for the global and local descriptions to be satisfied and some role-links would need to be added. We plan to add the feature of constructing the whole model for the satisfied inputs to our implementation soon. The printout of the interpretation includes names of the individuals followed by all the concepts satisfied by them, and then relations between individuals.
 
