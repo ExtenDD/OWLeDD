@@ -217,4 +217,7 @@ This is an additional, technical script. It contains functions for parsing conce
 
 This script contains functions that perform TBox optimisations and other necessary functions related with processing TBox (e.g. checking if TBox is acyclic or performing basic absorption techniques)
 
+### experiments
+
+Script used to perform experiments with the prover (not necessary to use the prover)
 
