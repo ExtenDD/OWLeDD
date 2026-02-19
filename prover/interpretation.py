@@ -28,7 +28,6 @@ class Interpretation:
         self._incoming = {} #a dictionary with worlds as keys; values are dictionairies with world as keys and sets of strings indicating modality types of incoming edges as values
         self._world_names_str  = set()   #set of all world names  in the interpretation
         self._GlDesc_rule3_fml_set = set()   #set of formulas C, such that the tableua rule for the negation of a global description has been applied to a some formula iC.D in this interpretation 
-        self.TBox_formulas = set()    #set of formulas present in the TBox input
         self._LocDesc_rule3_list = [list(), list()]  ##set of formulas C, such that the tableua rule for the negation of a local description has been applied to a some formula i.C in this interpretation
         self._optimisations = tuple() #choice of optimisations used by the prover will be also saved as an attribute of the interpretation
         self._Tbox_unfold_subs = set()
