@@ -20,7 +20,14 @@ def get_next_world_name(world_names):
     return next(world_names)
 
 def new_world_name(interpretation):
-    """ outputs a new world name, checking if it has not been used so far"""
+    """ outputs a new world name, checking if it has not been used so far
+
+        Argument:
+            interpretation: interpretation, to which the worlds are added
+            
+        Output:
+            a new world name
+    """
     worlds_counter = world_names()
     
     x = get_next_world_name(worlds_counter)
@@ -56,7 +63,14 @@ def get_next_fresh_atom(fresh_atom_names):
     return next(fresh_atom_names)
 
 def new_fresh_atom(interpretation):
-    """ outputs a new atom name, checking if it has not been used so far"""
+    """ outputs a new atom name, checking if it has not been used so far
+
+        Argument:
+            interpretation: interpretation, to which the fresh atoms are added
+            
+        Output:
+            A new fresh atom name
+    """
     fresh_atoms_counter = fresh_atom_names()
     
     x = get_next_fresh_atom(fresh_atoms_counter)
@@ -80,7 +94,7 @@ The three functions below, combined, generate new concept names, which is useful
 
 #generator
 def concept_names():
-    """ a generator of world names of the form w1, w2, w3,... """
+    """ a generator of concept names of the form C1, C2, C3,... """
     a = 'C'
     n = 1
     while True:
@@ -92,7 +106,14 @@ def get_next_concept_name(concept_names):
     return next(concept_names)
 
 def new_concept_name(concept_data_frame):
-    """ outputs a new world name, checking if it has not been used so far"""
+    """ outputs a new concept name, checking if it has not been used so far
+
+        Argument:
+            concept_data_frame: a dataframe containing a list of "artificial" concept names created so far
+            
+        Output:
+            A new concept name
+    """
     concepts_counter = concept_names()
   
     x = get_next_concept_name(concepts_counter)
@@ -114,7 +135,7 @@ The three functions below, combined, generate new role names, which is useful wh
 
 #generator
 def role_names():
-    """ a generator of world names of the form w1, w2, w3,... """
+    """ a generator of role names of the form r1, r2, r3,... """
     a = 'r'
     n = 1
     while True:
@@ -126,7 +147,14 @@ def get_next_role_name(role_names):
     return next(role_names)
 
 def new_role_name(role_data_frame):
-    """ outputs a new world name, checking if it has not been used so far"""
+    """ outputs a new role name, checking if it has not been used so far
+
+        Argument:
+            role_data_frame: a dataframe containing a list of "artificial" role names created so far
+            
+        Output:
+            a new role name
+    """
     roles_counter = role_names()
   
     x = get_next_role_name(roles_counter)
@@ -142,10 +170,21 @@ def new_role_name(role_data_frame):
 
 
 
-
 #5. Functions for for strings (for parsing the ontologies in functional syntax) -----------------------------
+"""
+The functions below are used when parsing ontologies. The central function is "parse_concept_from_ont"
+"""
+
 
 def get_OWL_concept_expression(string):
+    """ used to extract a string that corresponds to a concept (class in an ontology)
+
+        Argument:
+            string: a string that is part of an OWL expression
+            
+        Output:
+            a string that corresponds to a concept
+    """
     string = string.lstrip()
     counter = 0
     i = 0
@@ -181,7 +220,16 @@ def get_OWL_concept_expression(string):
 #first strips the leading spaces reads a string until a "limit_string" character is met 
 #if the "limit_string_alt" is also given, reads a string until either of the given limit strings are met
 def read_until_string(string, limit_string, limit_string_alt = None):
-    
+    """ reads a string until a "limit string" character is met (first strips the leading spaces)
+
+        Argument:
+            string: a string
+            limit_string: if this character is met, the rest of the input string is not contained in the output 
+            limit_string_alt: (optional) - it is possible to add a second limit string (then the algorithm stops reading in the input if any of the two strings are met) 
+            
+        Output:
+            part of the input string preceding the limit string(s)
+    """
     string = string.lstrip()
     
     ls_pos = string.find(limit_string)
@@ -203,10 +251,16 @@ def read_until_string(string, limit_string, limit_string_alt = None):
 
     
 
-
 def count_leading_spaces(str):
-    return len(str) - len(str.lstrip(' '))
+    """ counts leading spaces
 
+        Argument:
+            string: a string
+            
+        Output:
+            number of leading spaces in the input string
+    """
+    return len(str) - len(str.lstrip(' '))
 
 
 
@@ -214,18 +268,22 @@ def count_leading_spaces(str):
 def parse_concept_from_ont(concept_owl_str,
                            ont_concepts_df,
                            ont_roles_df,
-                           #ont_Tbox_atoms,
                            flexible_syntax,
                            if_Tbox_concept = False):
-    
- #   print("1 ", concept_owl_str)
- #   len_total = len(concept_owl_str)
+    """ parses strings corresponding to ontology classes into concepts as "formula objects" defined in the script "forms"
+
+        Argument:
+            concept_owl_str: a string that corresponds to a class in ontology
+            ont_concepts_df: a data frame of concepts that is an attribute of the DL_Tableau object
+            ont_roles_df: a data frame of roles that is an attribute of the DL_Tableau object
+            flexible_syntax: an argument to the DL_Tableau object - decides whether arbitrary string can be parsed as a concept
+            if_Tbox_concept: decided if the concept belongs to TBox 
+            
+        Output:
+            a "formula object" defined in the script "forms"
+    """
     start = read_until_string(concept_owl_str, "(", " ")
     txt_to_parse = concept_owl_str[len(start)+1:]
-#    len_txt_to_parse = len_total - len(start) -1    
-#    len_txt_to_parse = len(txt_to_parse)
-#    print("2 ", start)
- #   print("3 ", txt_to_parse)
     
     if start == "ObjectIntersectionOf":
         concept_list = list() #list of class/concept strings that corresponds to arguments of ObjectIntersectionOf 
@@ -234,8 +292,6 @@ def parse_concept_from_ont(concept_owl_str,
             next_concept_str = get_OWL_concept_expression(txt_to_parse) #read in the next concept-string in the intersection/conjunction
             concept_list.append(next_concept_str)  
             txt_to_parse = txt_to_parse[(count_leading_spaces(txt_to_parse)+len(next_concept_str)):]
-  #          print(concept_list)
-  #          print(txt_to_parse)
 
         no_concepts = len(concept_list)
         if no_concepts<2:
@@ -244,11 +300,9 @@ def parse_concept_from_ont(concept_owl_str,
         concept_out = forms.Conjunction(parse_concept_from_ont(concept_list[0],
                                                                ont_concepts_df,
                                                                ont_roles_df,
-                                                             #  ont_Tbox_atoms,
                                                                flexible_syntax), parse_concept_from_ont(concept_list[1],
                                                                                                         ont_concepts_df,
                                                                                                         ont_roles_df,
-                                                                                                        #ont_Tbox_atoms,
                                                                                                         flexible_syntax))
         
         i = no_concepts-2
@@ -257,7 +311,6 @@ def parse_concept_from_ont(concept_owl_str,
                                             parse_concept_from_ont(concept_list[no_concepts - i],
                                                                    ont_concepts_df,
                                                                    ont_roles_df,
-                                                               #    ont_Tbox_atoms,
                                                                    flexible_syntax))
             i -= 1                                
 
@@ -270,8 +323,6 @@ def parse_concept_from_ont(concept_owl_str,
             next_concept_str = get_OWL_concept_expression(txt_to_parse) #read in the next concept-string in the intersection/conjunction
             concept_list.append(next_concept_str)  
             txt_to_parse = txt_to_parse[(count_leading_spaces(txt_to_parse)+len(next_concept_str)):]
-   #         print(concept_list)
-   #         print(txt_to_parse)
 
         no_concepts = len(concept_list)
         if no_concepts<2:
@@ -280,7 +331,6 @@ def parse_concept_from_ont(concept_owl_str,
         concept_out = forms.Negation(forms.Conjunction(forms.Negation(parse_concept_from_ont(concept_list[0],
                                                                                              ont_concepts_df,
                                                                                              ont_roles_df,
-                                                                                           #  ont_Tbox_atoms,
                                                                                              flexible_syntax)),
                                                        forms.Negation(parse_concept_from_ont(concept_list[1],
                                                                                              ont_concepts_df,
@@ -294,7 +344,6 @@ def parse_concept_from_ont(concept_owl_str,
                                                            forms.Negation(parse_concept_from_ont(concept_list[no_concepts - i],
                                                                                                  ont_concepts_df,
                                                                                                  ont_roles_df,
-                                                                                             #    ont_Tbox_atoms,
                                                                                                  flexible_syntax))))
             i -= 1                                
 
@@ -305,12 +354,9 @@ def parse_concept_from_ont(concept_owl_str,
         concept_out = forms.Negation(parse_concept_from_ont(get_OWL_concept_expression(txt_to_parse),
                                                             ont_concepts_df,
                                                             ont_roles_df,
-                                                        #    ont_Tbox_atoms,
                                                             flexible_syntax))
         return(concept_out)
 
-
-#forms.parser_DL.parse(ont_concepts_df.loc[ont_concepts_df.source_iri==start, "concept_name"].iloc[0])
 
     elif start == "ObjectSomeValuesFrom":
         role = read_until_string(txt_to_parse, " ")
@@ -320,7 +366,6 @@ def parse_concept_from_ont(concept_owl_str,
            try: #first check if the class/concept has already appeared in declarations or otherwise in the ontology; if so - parse it
                role = ont_roles_df.loc[ont_roles_df.source_iri==role, "role_name"].iloc[0]
            except:
-               #nc = new_concept_name(self.concepts_df)
                nr = new_role_name(ont_roles_df)
                ont_roles_df.loc[len(ont_roles_df)] = [role,
                                                       nr,
@@ -331,12 +376,10 @@ def parse_concept_from_ont(concept_owl_str,
                                        parse_concept_from_ont(get_OWL_concept_expression(txt_to_parse),
                                                               ont_concepts_df,
                                                               ont_roles_df,
-                                                            #  ont_Tbox_atoms,
                                                               flexible_syntax))
            return(concept_out)
 
         else:
-#            if not ont_concepts_df['source_iri'].isin(['concept_owl_str'])
             if role not in set(ont_roles_df.source_iri):            
                 ont_roles_df.loc[len(ont_roles_df)] = [role,
                                                        None,
@@ -346,7 +389,6 @@ def parse_concept_from_ont(concept_owl_str,
                                        parse_concept_from_ont(get_OWL_concept_expression(txt_to_parse),
                                                               ont_concepts_df,
                                                               ont_roles_df,
-                                                         #     ont_Tbox_atoms,
                                                               flexible_syntax))
             return(concept_out)
  
@@ -360,7 +402,6 @@ def parse_concept_from_ont(concept_owl_str,
             try: #first check if the class/concept has already appeared in declarations or otherwise in the ontology; if so - parse it
                 role = ont_roles_df.loc[ont_roles_df.source_iri==role, "role_name"].iloc[0]
             except:
-                #nc = new_concept_name(self.concepts_df)
                 nr = new_role_name(ont_roles_df)
                 ont_roles_df.loc[len(ont_roles_df)] = [role,
                                                       nr,
@@ -371,12 +412,10 @@ def parse_concept_from_ont(concept_owl_str,
                                        forms.Negation(parse_concept_from_ont(get_OWL_concept_expression(txt_to_parse),
                                                                              ont_concepts_df,
                                                                              ont_roles_df,
-                                                                            # ont_Tbox_atoms,
                                                                              flexible_syntax))))
             return(concept_out)
 
         else:
-#            if not ont_concepts_df['source_iri'].isin(['concept_owl_str'])
             if role not in set(ont_roles_df.source_iri):            
                 ont_roles_df.loc[len(ont_roles_df)] = [role,
                                                        None,
@@ -386,20 +425,9 @@ def parse_concept_from_ont(concept_owl_str,
                                        forms.Negation(parse_concept_from_ont(get_OWL_concept_expression(txt_to_parse),
                                                                              ont_concepts_df,
                                                                              ont_roles_df,
-                                                                          #   ont_Tbox_atoms,
                                                                              flexible_syntax))))
             return(concept_out)
     
-
-
-
-#        concept_out = forms.Negation(forms.Diamond(role,
- #                                                  forms.Negation(parse_concept_from_ont(get_OWL_concept_expression(txt_to_parse),
-  #                                                                                       ont_concepts_df,
-   #                                                                                      ont_roles_df,
-    #                                                                                     flexible_syntax))))
-     #   return(concept_out)
-
                             
     elif start == "owl:Thing":
         parser_tree = forms.parser_ONT.parse("*T")
@@ -417,36 +445,19 @@ def parse_concept_from_ont(concept_owl_str,
                 parser_tree = forms.parser_ONT.parse(ont_concepts_df.loc[ont_concepts_df.source_iri==start, "concept_name"].iloc[0])
                 return(forms.ToFml().transform(parser_tree))
             except:
-                #nc = new_concept_name(self.concepts_df)
                 nc = new_concept_name(ont_concepts_df)
                 ont_concepts_df.loc[len(ont_concepts_df)] = [concept_owl_str,
                                                              nc,
                                                              False]
-                #updating the table with names of atomic concepts occuring in the TBox
-          #      if if_Tbox_concept == True:
-          #          if nc in set(ont_Tbox_atoms.atom_name):
-          #              pass
-          #          else:
-          #              ont_Tbox_atoms.loc[len(ont_Tbox_atoms)] = [concept_owl_str,
-          #                                                          nc]
 
                 parser_tree = forms.parser_ONT.parse(nc)
                 return(forms.ToFml().transform(parser_tree))
 
         else:
-#            if not ont_concepts_df['source_iri'].isin(['concept_owl_str'])
             if concept_owl_str not in set(ont_concepts_df.source_iri):            
                 ont_concepts_df.loc[len(ont_concepts_df)] = [concept_owl_str,
                                                              None,
                                                              False]
-
-            #updating the table with names of atomic concepts occuring in the TBox
-           # if if_Tbox_concept == True:
-           #     if concept_owl_str in set(ont_Tbox_atoms.atom_name):
-           #         pass
-           #     else:
-           #         ont_Tbox_atoms.loc[len(ont_Tbox_atoms)] = [concept_owl_str,
-           #                                                     None]
 
             parser_tree = forms.parser_ONT.parse(concept_owl_str)
             return(forms.ToFml().transform(parser_tree))
