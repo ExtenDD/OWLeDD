@@ -4,22 +4,14 @@ os.chdir('C:\\projekt_UŁ\\python\\FLOC_2026')
 import numpy as np
 import pandas as pd
 import re
-#from math import ceil
 import timeit
 import time
 import forms
 import tableau
-#import tableau_exp
 
+#choose path with the ontology file
 os.chdir('C:\\projekt_UŁ\\DL\\ore competition sample\\ore2015_sample\\pool_sample\\dl\\consistency\\files_consistency_dl')
-
-ont = pd.read_csv('ont_metadata.csv', sep=';')
-
-#ont = ont[0:3]
-ont = ont[ont.ax_size_type == "very large"]
-#ont = ont[ont.ore2015_filename == "ore_ont_2338.owl"]
-#ont = ont[ont.ore2015_filename != "small"]
-ont = ont[0:1]
+ont = pd.read_csv('ont_metadata.csv', sep=';') #additional file with metadata on ontologies
 
 
 ont["pars_runtime"] = pd.Series(dtype="float64")
@@ -31,9 +23,6 @@ ont["is_sat"] = False
 ont["TBox_cyclic"] = False
 ont['no_rules_applied'] = pd.Series(dtype="float64")
 ont['no_branches_explored'] = pd.Series(dtype="float64")
-
-#ont.info()
-#ont.head()
 
 
 
@@ -53,13 +42,12 @@ for row in ont.itertuples():
     print("tab", row.ore2015_filename)
 
     ont.loc[row.Index, 'is_sat'] = tab[1]
-    #ont.loc[row.Index, 'time_out'] = tab_result[0]
     ont.loc[row.Index, 'no_branches_explored'] = (tab[2] + 1) if tab[1] else tab[2]
     ont.loc[row.Index, 'no_rules_applied'] = tab[3]
 
 
-#3.1. measuring exact tableau generation time --
 
+#3.1. measuring exact tableau generation time --
 
 preparation_parser = """
 import tableau
@@ -83,17 +71,6 @@ for row in ont.itertuples():
     
 
 ont.to_csv('data_very_large8.csv')
-#data.to_excel('data.xlsx')
-#ont.to_csv('tt.csv')
-
-
-
-#EXPERIMENTS WITH DESCRIPTIONS---------------------
-
-#idziemy po konceptach
-#testujemy i.A
-#zapisujemy runtime i spełnialnosć (ew też l. regul i branches)
-#pyt.: jak to zrobić, żeby parsing był zrobiony tylko raz?
 
 
 import os
@@ -104,8 +81,6 @@ from copy import deepcopy
 import random
 import numpy as np
 import pandas as pd
-import re
-#from math import ceil
 import time
 import forms
 
@@ -171,6 +146,7 @@ for row in results.itertuples():
 
 
 
+#choose path and save the results
 os.chdir('C:\\projekt_UŁ\\python\\FLOC_2026\\exp2')
 results.to_csv('test9596.csv')
 
