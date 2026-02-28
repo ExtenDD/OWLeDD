@@ -9,8 +9,14 @@ It can be used to:
 - create simple ontologies within Pythonic syntax and check for their consistency
 - check consistency of ALC concepts with respect to the input ontologies
 
+The website of the library is: https://pypi.org/project/OWLeDD/0.0.2/
 
-Our library is currently available in the form of downloadable python scripts, but very soon a full package will be available to install. At the moment, to use the package the user needs to: download all the files contained in the folder „prover”; copy the files to one folder on a local compuer; open the script „tableau”; change the folder path at the top of the script; run the script. Then all the functions from the package described below will be usable..
+You can install it using
+
+```
+pip install OWLeDD
+```
+
 
 ## What are definite descriptions?
 
