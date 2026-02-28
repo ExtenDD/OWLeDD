@@ -172,8 +172,11 @@ ontology. If the input turns out to be satisfiable, the ontology allows models i
 If you save the initialized DL_Tableau object in a variable, you can access various types of information that are saved as attributes of that object, or using functions on the object. Here is the list of them (we take it that the tableau is saved in the variable "tab", as in the previous examples):
 
 **tab.satisfiability_check()**: outputs True/False, indicating if the input is satisfiable 
+
 **tab.nodes_count()**: outputs the number of nodes created while constructing the tableau. Corresponds to the number of rules applied 
+
 **tab.branches_count()**: outputs the number of branches explored while constructing the tableau. If the output is "1", no non-deteministic rule has been applied, closing the tableau after exploring one branch. 
+
 **tab.print_interpretation()**: prints an text interpretation of the tableau in the console, indicating individuals and atomic concepts that are satisfied in them, and list of roles that connect individuals
 
 
