@@ -9,9 +9,9 @@ It can be used to:
 - create simple ontologies within Pythonic syntax and check for their consistency
 - check consistency of ALC concepts with respect to the input ontologies
 
-The website of the library is: https://pypi.org/project/OWLeDD/0.0.2/
+The website of the library is: https://pypi.org/project/OWLeDD/0.0.3/
 
-You can install it using
+Installation:
 
 ```
 pip install OWLeDD
