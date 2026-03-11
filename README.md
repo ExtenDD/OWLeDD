@@ -100,7 +100,7 @@ For example:
   - `'i.Rich'`
   - `'~i.XaV'`
 \
-
+\
 
 Names of individuals can be any strings of symbols. 
 
