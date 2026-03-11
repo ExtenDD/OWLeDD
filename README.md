@@ -1,4 +1,4 @@
-# OWLeDD: a Python Library for Tableu Reasoning in Description Logic ALC Extended with Definite Descriptions 
+# OWLeDD: a Python Library for Tableau Reasoning in Description Logic ALC Extended with Definite Descriptions 
 
 OWLeDD is an implementation of tableau-based prover for description logic ALC with two types of operators for definite descriptions. 
 
@@ -180,7 +180,7 @@ If you save the initialized DL_Tableau object in a variable, you can access vari
 **tab.print_interpretation()**: prints an text interpretation of the tableau in the console, indicating individuals and atomic concepts that are satisfied in them, and list of roles that connect individuals
 
 
-### Optimalisations
+### Optimisations
 
 Note that the prover some performs some optimalisation, that can be "switched on or off" using arguments on initializing the DL_Tableau object. 
 
@@ -224,7 +224,7 @@ This is an additional, technical script. It contains functions for parsing conce
 
 ### TBox_optimisations
 
-This script contains functions that perform TBox optimisations and other necessary functions related with processing TBox (e.g. checking if TBox is acyclic or performing basic absorption techniques)
+This script contains functions that perform TBox optimisations and other necessary functions used in the processing of TBox (e.g. checking if TBox is acyclic or performing basic absorption techniques).
 
 ### experiments
 
