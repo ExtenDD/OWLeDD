@@ -132,8 +132,8 @@ Here is another example of a complete input with all the 4 arguments:
 ```
 tab = DL_Tableau(concept = ['C1 ⊓ :T', 'i C2.C3'],
                  ABox = {'Robert': ''*A role1 S2''},
-                 RBox = {'role2': ['ind1', 'ind$%@']},
-                 TBox = ['C1 ⊑ C2&C5', 'A ]))
+                 RBox = {'role2': ['ind1', 'ind2']},
+                 TBox = ['C1 ⊑ C2&C5']))
 ```
 
 
