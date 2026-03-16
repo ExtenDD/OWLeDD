@@ -133,7 +133,7 @@ Here is another example of a complete input with all the 4 arguments:
 tab = DL_Tableau(concept = ['C1 ⊓ :T', 'i C2.C3'],
                  ABox = {'Robert': ''*A role1 S2''},
                  RBox = {'role2': ['ind1', 'ind2']},
-                 TBox = ['C1 ⊑ C2&C5']))
+                 TBox = ['C1 ⊑ C2&C5'])
 ```
 
 
@@ -226,7 +226,7 @@ This is an additional, technical script. It contains functions for parsing conce
 
 This script contains functions that perform TBox optimisations and other necessary functions used in the processing of TBox (e.g. checking if TBox is acyclic or performing basic absorption techniques).
 
-### experiments
+### experiments_IJCAR_submission
 
-Script used to perform experiments with the prover (not necessary to use the prover)
+Script used to perform some experiments with the prover
 
