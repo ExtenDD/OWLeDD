@@ -9,7 +9,7 @@ It can be used to:
 - create simple ontologies within Pythonic syntax and check for their consistency
 - check consistency of ALC concepts with respect to the input ontologies
 
-The website of the library is: https://pypi.org/project/OWLeDD/0.0.3/
+The website of the library is: https://pypi.org/project/OWLeDD/0.0.4/
 
 Installation:
 
@@ -35,7 +35,7 @@ tab = DL_Tableau(ontology = 'ontology_file.owl',
                  concept = ['Student ⊓ Tall', 'i.Bob', 'Ǝ isStudentOf John'],
                  ABox = {'Robert': 'Man'},
                  RBox = {'neighbour': ['Ana', 'Robert']},
-                 TBox = ['Student ⊑ Man']))
+                 TBox = ['Student ⊑ Man'])
 ```
 
 When a DL_Tableau object is initialised, a tableau is built and the user can access various types of information about it.
