@@ -51,7 +51,6 @@ _subfml : "(" fml ")" | _unary | atom | description_global | description_local |
 """, start = "fml")
 
 ''
-#parser='lalr' - nie udało się
 
 
 
@@ -77,27 +76,11 @@ bot: "⊥" | "*F"
 
 
 
-#_latex_symbols = {
-#    "⊥": r"\bot",
-#    "⊤": r"\top",
-#}
-
-
 class ToFml(Transformer):
     """ Transformer class, required by the Lark library to transform a tree object initially built by the parser into a proper Formula object (as defined below)"""
     
     def atom(self, v):
         return Atom(*v)
-
-
-#wersja z bot i top
-#    def atom(self, v):
-#        return Atom(*v)
-#        return Atom(*v, latex=_latex_symbols.get(v[0], None))
-#        if len(v) == 1:
-#            return Atom(*v, latex=_latex_symbols.get(v[0], None))
-#        else:
-#            return Atom(v)
 
     def negation(self, v):
         return Negation(*v)
@@ -127,7 +110,6 @@ class ToFml(Transformer):
         return Description_Global(*v)
 
     def top(self, v):
-#        return Negation(Conjunction(Atom('Spec_atom_top_bot'), Negation(Atom('Spec_atom_top_bot'))))
         return Atom('Spec_atom_top')
     
     def bot(self, v):
@@ -193,19 +175,6 @@ class Formula():
         """ Returns the "complexity score" of a formula, reflecting the relative runtime of the prover for this formula """
         return self.descr_global_local_count()*2 + self.occur_var_count() + self.modal_count() + self.modal_degree()
 
-
-#może będzie jeszcze potrzebne
-#    def max_depth(self) -> int:
-#        pass
-
-#    def structural_balance(self) -> int:
-#        pass
-
-#    def var_weight(self) -> int:
-#        return self.var_count() / self.occur_var_count()     
-
-
-
     #FUNCTIONS RELATED TO FORMULA REPRESENTATION
 
     def __str__(self) -> str:
@@ -238,45 +207,6 @@ class Atom(Formula):
     def __init__(self, atom_string: str):
         self.atom_string = atom_string
 
-#poniższe - do FOL? jakie ze starej wersji
-#        if isinstance(constant_or_nonzero, list):
-#            self.predicate, self.terms = (
-#                str(constant_or_nonzero[0]),
-#                tuple(map(str, constant_or_nonzero[1:])),
-#            )
-#        else:
-#            constant = constant_or_nonzero
-#            self.predicate = str(constant)
-#            self.terms = []
-#        self._latex = latex
-
-
-
-#poniższe - znów do FOL?
-# =============================================================================
-#     @property
-#     def symbol(self) -> str:
-#         if len(self.terms) == 0:
-#             return f"{self.predicate}"
-#         else:
-#             return f"{self.predicate}({', '.join(self.terms)})"
-# 
-# =============================================================================
-
-# =============================================================================
-#     @property
-#     def free_terms(self):
-#         return self.terms
-# 
-#     def replace_term(self, replaced_term, replacing_term):
-#         fml = self
-#         fml.terms = [
-#             replacing_term if term == replaced_term else term for term in self.terms
-#         ]
-#         return fml
-# =============================================================================
-
-
 
     @property
     def atoms(self):
@@ -293,11 +223,6 @@ class Atom(Formula):
 
     def __repr__(self) -> str:
         return f"Atom[{self.atom_string}]"
-
-#    def latex(self):
-#        return f"{self._latex or self.symbol}"
-#        return f"{self.latex or self.atom_string}"
-#        return f"{self.atom_string}"
 
 
     #FUNCTIONS FOR EQUALITY
@@ -359,14 +284,6 @@ class Unary(Formula):
         return f"{self.signature}[{repr(self.sub)}]"
 
 
-#    def latex(self):
-#        return f"{self.connective_latex} " + (
-#            f"({self.sub.latex()})"
-#            if isinstance(self.sub, Binary)
-#            else f"{self.sub.latex()}"
-#        )
-
-
     #FUNCTIONS REFLECTING STRUCTURAL PROPERTIES
 
     def binary_count(self) -> int:
@@ -389,7 +306,6 @@ class Negation(Unary):
     """Class for negations"""
     signature = "Neg"   #used for the "__repr__" function
     connective = "¬"    #used for "__str__" and "formula_string" functions
-#    connective_latex = r"\neg"
 
 
     #FUNCTIONS FOR EQUALITY
@@ -414,7 +330,6 @@ class Description_Local(Unary):
     """Class for local definite descriptions"""
     signature = "Desc_Loc"   #used for the "__repr__" function
     connective = "i."     #used for "__str__" and "formula_string" functions
-    #connective_latex = r"\iota ."
 
     #FUNCTIONS FOR EQUALITY
     
@@ -438,7 +353,6 @@ class Diamond(Formula):
     """ Class for modal formulas of the form "Ǝ modality_type Formula" """
     signature = "Diamond"  #used for the "__repr__" function
     connective = "Ǝ "  #used for "__str__" and "formula_string" functions
-    #connective_latex = r"\exists"
 
     def __init__(self, sub1, sub2: Formula):
        self.role = str(sub1)  #attribute for the modality type (role - in the jargon of description logic)
@@ -470,14 +384,6 @@ class Diamond(Formula):
 
     def __repr__(self) -> str:
         return f"{self.signature}[{self.role} {repr(self.sub2)}]"
-
-
-#    def latex(self):
-#        return f"{self.connective_latex} " + f"{self.role}" + "." + (
-#            f"({self.sub2.latex()})"
-#            if isinstance(self.sub2, Binary) | isinstance(self.sub2, Diamond) | isinstance(self.sub2, Description_Local) 
-#            else f"{self.sub2.latex()}"
- #       )
 
 
     #FUNCTIONS FOR EQUALITY
@@ -553,14 +459,6 @@ class Binary(Formula):
         )
 
 
-#    def latex(self):
-#        return f" {self.connective_latex} ".join(
-#            map(
-#                lambda x: f"({x.latex()})" if isinstance(x, Binary) else f"{x.latex()}",
-#                self.subs,
-#            )
-#        )
-
 
     #FUNCTIONS REFLECTING STRUCTURAL PROPERTIES
 
@@ -602,29 +500,6 @@ class Conjunction(Binary):
         return hash(self.subs)
 
 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!To do!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#DISJUNCTION----------------------------------
-
-
-#class Disjunction(Binary):
-#    signature = "Disj"
-#    connective = "∨"
-#    connective_latex = r"\lor"
-
- #   def __init__(self, sub1: Formula, sub2: Formula):
-#        self.subs = (sub1, sub2)
-        
-
-    #ATTRIBUTES FOR EQUALITY
-    
- #   def __eq__(self,other):
-#        return ((self.subs[0] == other.subs[0] and self.subs[1] == other.subs[1]) or (self.subs[0] == other.subs[1] and self.subs[1] == other.subs[0]) if isinstance(other, Disjunction) else False)
-
- #   def __hash__(self):
- #       return hash(self.subs)
-#
-
-
 
 #SUBSUMPTION----------------------------------
 
@@ -633,7 +508,6 @@ class Subsumption(Binary):
     """ Class for Subsumptions """
     signature = "Subsum"   #used for the "__repr__" function
     connective = "→"     #used for "__str__" and "formula_string" functions
-    #connective_latex = r"\sqsubseteq"  
 
     def __init__(self, sub1: Formula, sub2: Formula):
         self.subs = (sub1, sub2)
@@ -692,20 +566,7 @@ class Description_Global(Binary):
             self.signature, ", ".join(map(lambda x: repr(x), self.subs))
         )
 
-
-#    def latex(self):
-#        return f"{self.connective_latex} " + (
-#            f"({self.subs[0].latex()})"
-#            if isinstance(self.subs[0], Binary)
-#            else f"{self.subs[0].latex()}"
-#            ) + "." + (
-#            f"({self.subs[1].latex()})"
-#            if isinstance(self.subs[1], Binary)
-#            else f"{self.subs[1].latex()}"
-#        )
-
-
-
+    
     #FUNCTIONS FOR EQUALITY
 
     def __eq__(self,other):
