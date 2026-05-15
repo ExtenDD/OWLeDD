@@ -1,7 +1,0 @@
-﻿logical_axiom_count;axiom_types;ore2015_filename;expressivity
-319;SubClassOf Declaration DisjointClasses ;ore_ont_2229.owl;ALC
-877;SubClassOf Declaration EquivalentClasses ClassAssertion ;ore_ont_2608.owl;ALE
-934;Declaration SubClassOf EquivalentClasses ClassAssertion ;ore_ont_4516.owl;ALC
-941;Declaration EquivalentClasses ;ore_ont_10366.owl;ALE
-941;Declaration EquivalentClasses ;ore_ont_7833.owl;ALE
-866;SubClassOf Declaration EquivalentClasses DisjointClasses ;ore_ont_2338.owl;ALC
