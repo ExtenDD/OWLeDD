@@ -38,8 +38,8 @@ conjunction : (conjunction | disjunction | subsumption | equivalence | _subfml |
 disjunction : (conjunction | disjunction | subsumption | equivalence | _subfml | top | bot) ("|" | "⊔") _subfml
 subsumption : (conjunction | disjunction | subsumption | equivalence | _subfml | top | bot) ("->" | "⊑") _subfml
 equivalence : (conjunction | disjunction | subsumption | equivalence | _subfml | top | bot) ("<->" | "≡") _subfml
-description_global : "i" _subfml "." _subfml
-description_local : "i" "." _subfml
+description_global : ("i" | "ι") _subfml "." _subfml
+description_local : ("i" | "ι") "." _subfml
 diamond : ("Ǝ" | "*E") ROLE _subfml
 box : ("∀" | "*A") ROLE _subfml
 
@@ -76,6 +76,52 @@ bot: "⊥" | "*F"
 
 
 
+"""
+Basic grammer for the language of multi-modal logic K. 
+"""
+
+parser_ML = Lark(r"""
+?fml: conjunction
+    | disjunction
+    | implication
+    | equivalence_ml
+    | description_global
+    | description_local
+    | negation
+    | diamond
+    | box
+    | atom
+    | top
+    | bot
+    | _subfml
+
+ATOM :  /p[0-9]*/ | /q[0-9]*/ | /r[0-9]*/ | /s[0-9]*/ | /t[0-9]*/
+MODALITY_CODE : /[a-zA-Z0-9]+/
+
+atom : ATOM
+top: "⊤" | "*T"
+bot: "⊥" | "*F"
+negation : ("~" | "¬") _subfml
+conjunction : (conjunction | disjunction | implication | equivalence_ml | _subfml | top | bot) ("&" | "∧") _subfml
+disjunction : (conjunction | disjunction | implication | equivalence_ml | _subfml | top | bot) ("|" | "∨") _subfml
+implication : (conjunction | disjunction | implication | equivalence_ml | _subfml | top | bot) ("->"| "→") _subfml
+equivalence_ml : (conjunction | disjunction | implication | equivalence_ml | _subfml | top | bot) ("<->" | "≡") _subfml
+description_global : "@" _subfml "." _subfml
+description_local : "@" "." _subfml
+diamond : "<" MODALITY_CODE ">" _subfml
+box : "[" MODALITY_CODE "]" _subfml
+
+_unary : negation | diamond | box | description_local
+_subfml : "(" fml ")" | _unary | atom | description_global | description_local | top | bot
+
+%import common.WS
+%ignore WS
+""", start = "fml")
+
+''
+
+
+
 class ToFml(Transformer):
     """ Transformer class, required by the Lark library to transform a tree object initially built by the parser into a proper Formula object (as defined below)"""
     
@@ -100,9 +146,16 @@ class ToFml(Transformer):
     def subsumption(self, v):
         return Subsumption(*v)
 
+    def implication(self, v):
+        return Negation(Conjunction(v[0], Negation(v[1])))
+    
     def equivalence(self, v):
-        return Conjunction(Subsumption(v[0], v[1]),Subsumption(v[1], v[0]))
-
+        return Equivalence(*v)
+    
+    def equivalence_ml(self, v):
+        return Conjunction(Negation(Conjunction(v[0], Negation(v[1]))),
+                           Negation(Conjunction(v[1], Negation(v[0]))))
+    
     def description_local(self, v):
         return Description_Local(*v)
 
@@ -175,6 +228,7 @@ class Formula():
         """ Returns the "complexity score" of a formula, reflecting the relative runtime of the prover for this formula """
         return self.descr_global_local_count()*2 + self.occur_var_count() + self.modal_count() + self.modal_degree()
 
+
     #FUNCTIONS RELATED TO FORMULA REPRESENTATION
 
     def __str__(self) -> str:
@@ -223,7 +277,6 @@ class Atom(Formula):
 
     def __repr__(self) -> str:
         return f"Atom[{self.atom_string}]"
-
 
     #FUNCTIONS FOR EQUALITY
     
@@ -329,7 +382,7 @@ class Negation(Unary):
 class Description_Local(Unary):
     """Class for local definite descriptions"""
     signature = "Desc_Loc"   #used for the "__repr__" function
-    connective = "i."     #used for "__str__" and "formula_string" functions
+    connective = "ι."     #used for "__str__" and "formula_string" functions
 
     #FUNCTIONS FOR EQUALITY
     
@@ -459,7 +512,6 @@ class Binary(Formula):
         )
 
 
-
     #FUNCTIONS REFLECTING STRUCTURAL PROPERTIES
 
     def binary_count(self) -> int:
@@ -484,8 +536,7 @@ class Binary(Formula):
 class Conjunction(Binary):
     """ Class for Conjunctions """
     signature = "Conj"   #used for the "__repr__" function
-    connective = "∧"    #used for "__str__" and "formula_string" functions
-    #connective_latex = r"\land"
+    connective = "⊓"    #used for "__str__" and "formula_string" functions
 
     def __init__(self, sub1: Formula, sub2: Formula):
         self.subs = (sub1, sub2)
@@ -507,19 +558,22 @@ class Conjunction(Binary):
 class Subsumption(Binary):
     """ Class for Subsumptions """
     signature = "Subsum"   #used for the "__repr__" function
-    connective = "→"     #used for "__str__" and "formula_string" functions
+    connective = "⊑"     #used for "__str__" and "formula_string" functions
 
     def __init__(self, sub1: Formula, sub2: Formula):
         self.subs = (sub1, sub2)
 
 
-    #FUNCTIONS FOR EQUALITY
-    
-    def __eq__(self,other):
-        return (self.subs[0] == other.subs[0] and self.subs[1] == other.subs[1] if isinstance(other, Subsumption) else False)
+#EQUIVALENCE----------------------------------
 
-    def __hash__(self):
-        return hash(self.subs)
+
+class Equivalence(Binary):
+    """ Class for Equivalences """
+    signature = "Equiv"   #used for the "__repr__" function
+    connective = "≡"     #used for "__str__" and "formula_string" functions
+
+    def __init__(self, sub1: Formula, sub2: Formula):
+        self.subs = (sub1, sub2)
 
 
 
@@ -529,8 +583,7 @@ class Subsumption(Binary):
 class Description_Global(Binary):
     """ Class for Global descriptions """
     signature = "Desc_Glob"   #used for the "__repr__" function
-    connective = "i "         #used for "__str__" and "formula_string" functions
-    #connective_latex = r"\iota"
+    connective = "ι "         #used for "__str__" and "formula_string" functions
 
     def __init__(self, sub1: Formula, sub2: Formula):
         self.subs = (sub1, sub2)
@@ -566,7 +619,9 @@ class Description_Global(Binary):
             self.signature, ", ".join(map(lambda x: repr(x), self.subs))
         )
 
-    
+
+
+
     #FUNCTIONS FOR EQUALITY
 
     def __eq__(self,other):
@@ -593,11 +648,18 @@ class Description_Global(Binary):
 
 
 ####################################
-#additional functions - transformations on formulas
+#additional functions - technical functions for various transformations on formulas
 
 
-#unfold a concjunction (with potentially many sub-conjunctions) in a set
 def unfold_conjunction(conj):
+    """ unfold a concjunction (with potentially many sub-conjunctions) in a set
+
+        Argument:
+            conj: Conjunction object
+            
+        Output:
+            set of (possibly more than two) concepts/formulas that are elements of a conjunction
+    """
     out = {conj.subs[0], conj.subs[1]}
     set = out
     for form in set:
@@ -605,8 +667,15 @@ def unfold_conjunction(conj):
             out = (out-{form}) | unfold_conjunction(form)
     return(out)
 
-#fold a set of formulas/concepts (implicitely forming a conjunction) back into a conjunction object
 def fold_into_conjunction(conj_set):
+    """ fold a set of formulas/concepts (implicitely forming a conjunction) back into a conjunction object
+
+        Argument:
+            conj_set: set of Formula objects that represents a conjunction
+            
+        Output:
+            Conjunction object consisting of elements of the input set
+    """
     
     if len(conj_set) ==1:
         return(conj_set.pop())    
@@ -625,6 +694,14 @@ def fold_into_conjunction(conj_set):
 
 
 def negate_formula(form):
+    """ return negation of a formula, disregarding the leading double negation
+
+        Argument:
+            form: Formula object
+            
+        Output:
+            negation of the input; if the input formula is a negation, leading double negation is disregarded
+    """
     if isinstance(form, Negation):
         return(form.sub)
     else:
@@ -632,8 +709,15 @@ def negate_formula(form):
 
 
 
-#unfold a concjunction (with potentially many sub-conjunctions) in a set of alternatives (clause)
 def unfold_neg_conj_into_set_of_alt(neg_conj):
+    """ unfold negated concjunctions (possibly many) in a set of Formulas that represent a disjunction (clause)
+
+        Argument:
+            neg_conj: negated conjunction object (with one of its elements possibly being another negated conjunction, etc.)
+            
+        Output:
+            set of Formulas that represent a disjunction (clause)
+    """
     out = {negate_formula(neg_conj.sub.subs[0]), negate_formula(neg_conj.sub.subs[1])}
     set = out
     for form in set:
