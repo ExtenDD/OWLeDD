@@ -1,6 +1,6 @@
-from . import forms
-from . import interpretation
-from . import rules
+import forms
+import interpretation
+import rules
 
 
 from copy import deepcopy
