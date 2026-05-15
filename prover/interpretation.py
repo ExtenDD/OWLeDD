@@ -9,7 +9,7 @@ class World:
         self._world_name_str = None    #world name as a string object - serves to identify the world
         self._box_subformulas = {} #a dictionary with modality types 'r' as keys; values are sets of formulas A, such that ~*E r A are satisfied in this world
         self._candidates_blocking = {} #a dictionary with worlds as keys; values are dictionaries with roles as keys, and as values - the blocked formulas of type *E r A, where r is the role in the key; the world in the primary key is a 'candidate' world with respect to all of the corresponding formulas
-        self._Tbox_unfold_list_alt = list()                        
+        self._Tbox_unfold_list_alt = list() #used only if the SAT-optimization argument of the tablea is set to True: a list of clauses (sets of formulas) that correspond to disjunctions and subsumptions (local: refers only to a particular word/individual)                                              
                         
     def formulas(self):
         """Return formulas associated with this world."""
@@ -28,16 +28,18 @@ class Interpretation:
         self._incoming = {} #a dictionary with worlds as keys; values are dictionairies with world as keys and sets of strings indicating modality types of incoming edges as values
         self._world_names_str  = set()   #set of all world names  in the interpretation
         self._GlDesc_rule3_fml_set = set()   #set of formulas C, such that the tableua rule for the negation of a global description has been applied to a some formula iC.D in this interpretation 
+        self._LocDesc_rule3_block_cond_set = set()  #set of formulas C, such that the tableua rule for the negation of a local description has been applied to a some formula i.C in this interpretation
         self._LocDesc_rule3_list = [list(), list()]  ##set of formulas C, such that the tableua rule for the negation of a local description has been applied to a some formula i.C in this interpretation
         self._optimisations = tuple() #choice of optimisations used by the prover will be also saved as an attribute of the interpretation
-        self._Tbox_unfold_subs = set()
-        self._Tbox_fold_subs = set()
-        self._Tbox_fold_eq = set()
-        self._Tbox_fold_subs_conj = list()
-        self._Tbox_fold_subs_neg = set()
-        self._Tbox_fold_subs_ex_restr = set()
-        self._Tbox_unfold_global = list()
-        self._worlds_to_unify = list()
+        self._Tbox_unfold_subs = set() #unfoldable part of TBox: subsumptions 
+        self._Tbox_fold_subs = set()  #foldable part of TBox: subsumptions with atom in the antecedent
+        self._Tbox_fold_eq = set()  #foldable part of TBox: equivalences
+        self._Tbox_fold_subs_conj = list()   #foldable part of TBox: subsumptions with conjunction of atoms in the antecedent
+        self._Tbox_fold_subs_neg = set()   #foldable part of TBox: subsumptions with negation of atom in the antecedent
+        self._Tbox_fold_subs_ex_restr = set()  #foldable part of TBox: subsumptions with existential restriction in the antecedent
+        self._Tbox_unfold_global = list() #used only if the SAT-optimization argument of the tablea is set to True: a list of clauses (sets of formulas) that correspond to disjunctions and subsumptions (global: refers to every word/individual)
+        self._worlds_to_unify = list() #stores information about which worlds/individuals should be "unified" when using the (second) local description rule 
+
 
 
     def worlds(self):
