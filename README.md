@@ -1,3 +1,4 @@
+
 # OWLeDD: a Python Library for Tableau Reasoning in Description Logic ALC Extended with Definite Descriptions 
 
 OWLeDD is an implementation of tableau-based prover for description logic ALC with two types of operators for definite descriptions. 
@@ -8,8 +9,9 @@ It can be used to:
 - load ontologies with expressivity of ALC in functional syntax and check their consistency
 - create simple ontologies within Pythonic syntax and check for their consistency
 - check consistency of ALC concepts with respect to the input ontologies
+- check for satisfiability of formulas of multi-modal logic K with definite descriptions
 
-The website of the library is: https://pypi.org/project/OWLeDD/0.0.4/
+The website of the library is: https://pypi.org/project/OWLeDD
 
 Installation:
 
@@ -35,7 +37,7 @@ tab = DL_Tableau(ontology = 'ontology_file.owl',
                  concept = ['Student ⊓ Tall', 'i.Bob', 'Ǝ isStudentOf John'],
                  ABox = {'Robert': 'Man'},
                  RBox = {'neighbour': ['Ana', 'Robert']},
-                 TBox = ['Student ⊑ Man'])
+                 TBox = ['Student ⊑ Man']))
 ```
 
 When a DL_Tableau object is initialised, a tableau is built and the user can access various types of information about it.
@@ -65,13 +67,16 @@ For convenience, the parser allows using both description logic "square" syntax,
 - Conjunction of two concepts can be built using either of the symbols `&` or `Π`. For example:
   - `'F & R1'`
   - `'Man Π Student'`
-- Disjunction of two concepts can be built using either of the symbols `&` or `⊔`. For example:
+- Disjunction of two concepts can be built using either of the symbols `|` or `⊔`. For example:
   - `'F | R1'`
   - `'Tall ⊔ Pretty'`
 - Subsumption of two concept can be built using the string of symbols "->" or the symbol "⊑". For example:
   - `'A -> B'`
   - `'Flower ⊑ ~Man'`
-- The existential quantifier can be built either using the symbol `Ǝ` or the string of symbols `*E`. The general quantifier can be built either using the symbol `∀` or the string of symbols `*A`. Roles have to start with small letters, followed by capital letters, small letters, digits or the symbol `_` (as with concepts, they can also be precede by the symbol ":"). The whole concept consists of three parts that have to be put in the following order, with spaces between them:
+- Equivalence of two concept can be built using the string of symbols "<->" or the symbol "≡". For example:
+  - `'C ≡ B'`
+  - `'Student <-> (Male | Female) & Attends_course'`
+- The existential quantifier can be built either using the symbol `Ǝ` or the string of symbols `*E`. The general quantifier can be built either using the symbol `∀` or the string of symbols `*A`. Roles have to start with small letters, followed by capital letters, small letters, digits or the symbol `_` (as with concepts, they can also be preceded by the symbol ":"). The whole concept consists of three parts that have to be put in the following order, with spaces between them:
 \
 \
 `[quantifier] [role] [concept]`
@@ -81,24 +86,24 @@ For convenience, the parser allows using both description logic "square" syntax,
   - `'Ǝ r R5'`
   - `'∀ :likes Tall'`
   - `'~*A isStudentOf John'`
-- Global descriptions are built in following way (spaces between the dot and the concept names are not necessary):
+- Global descriptions are built as described below (spaces between the dot and the concept names are not necessary). Note that either the symbol `'ι'` or `'i'` can be used.
 \
 \
-`[i] [Concept1] [.] [Concept2]`
+`[ι] [Concept1] [.] [Concept2]`
 \
 \
 For example:
-  - `'i A1.B4'`
+  - `'ι A1.B4'`
   - `'~i Rich.Pretty'`
 - Local descriptions are built in the following way (space between the dot and the concept name is not necessary):
 \
 \
-`[i] [.] [Concept]`
+`[ι] [.] [Concept]`
 \
 \
 For example:
   - `'i.Rich'`
-  - `'~i.XaV'`
+  - `'~ι.XaV'`
 \
 \
 
@@ -149,12 +154,12 @@ You can load an ontology from an "owl" file, using the "ontology" argument. At t
 - EquivalentClasses
 - DisjointClasses
 
-If concept and role names do not conform to the parsing conventions named above, you need to use set an additional argument "flexible_syntax" to "True" when creating a DL_Tableu. In this case, the parser accepts any non-space string of symbols (an exception are the parenthesis symbols "(" and ")" - using them inside concept, role or individual names will likely cause paring errors). Here is an example of such input:
+If concept and role names do not conform to the parsing conventions named above, you need to set an additional argument "flexible_syntax" to "True" when creating a DL_Tableu. In this case, the parser accepts any non-space string of symbols (an exception are the parenthesis symbols "(" and ")" - using them inside concept, role or individual names will likely cause paring errors). Here is an example of such input:
 ```
 tab = DL_Tableau(ontology = 'ontology_file.owl',
                  flexible_syntax = True)
 ```
-If you set "flexible_syntax" to "True", you can also use the names from the ontology in the "concept", "ABox", "RBox" and "TBox" arguments. In particular, you can check if a concpet is satisfied with respect to an ontology. Here is an example of such application of the prover:
+If you set "flexible_syntax" to "True", you can also use the names from the ontology in the "concept", "ABox", "RBox" and "TBox" arguments. In particular, you can check if a concept is satisfied with respect to an ontology. Here is an example of such application of the prover:
 
 ```
 tab = DL_Tableau(ontology = 'ontology_file.owl',
@@ -169,15 +174,18 @@ ontology. If the input turns out to be satisfiable, the ontology allows models i
 
 ### Main functions on the "DL_Tableau" object
 
-If you save the initialized DL_Tableau object in a variable, you can access various types of information that are saved as attributes of that object, or using functions on the object. Here is the list of them (we take it that the tableau is saved in the variable "tab", as in the previous examples):
+If you save the initialized DL_Tableau object in a variable, you can access various types of information that are saved as attributes of that object, or using functions on the object. Here is the list (we take it that the tableau is saved in the variable "tab", as in the previous examples):
 
-**tab.satisfiability_check()**: outputs True/False, indicating if the input is satisfiable 
+**tab.satisfiability_check()**: outputs True/False, indicating if the input is satisfiable.
 
-**tab.nodes_count()**: outputs the number of nodes created while constructing the tableau. Corresponds to the number of rules applied 
+**tab.nodes_count()**: outputs the number of nodes created while constructing the tableau. Corresponds to the number of rules applied. 
 
-**tab.branches_count()**: outputs the number of branches explored while constructing the tableau. If the output is "1", no non-deteministic rule has been applied, closing the tableau after exploring one branch. 
+**tab.branches_count()**: outputs the number of branches contained in the resulting tableau. If the output is "1", no non-deterministic rule has been applied, closing the tableau after exploring one branch. 
 
-**tab.print_interpretation()**: prints an text interpretation of the tableau in the console, indicating individuals and atomic concepts that are satisfied in them, and list of roles that connect individuals
+**tab.print_interpretation()**: prints an interpretation of the tableau in the console in a text format, indicating individuals and atomic concepts that are satisfied in them, and list of roles that connect individuals.
+
+**tab.execution_time()**: outputs the execution time, divided into parsing time and time taken to build the tableau.
+
 
 
 ### Optimisations
@@ -187,21 +195,68 @@ Note that the prover some performs some optimalisation, that can be "switched on
 - use_absorption: this defaults to "True", and uses some basic absorption techniques
 - use_foldable_TBox: this also defaults to "True", and divides TBox into foldable and unfoldable parts, that 
 - use_SAT_optimisations: corresponds to selected standard SAT-inspired optimisations, like semantic branching or Boolean constraint propagation. This defaults to "False", as it using it might not be effective on selected ontologies. 
-- use_add_disj_optimisations: this is a mechanism for selecting the concept to expand in the case of a disjunction, based on syntactic features. Each concept is assigned a score determined by its size and the types of constructors it contains.
-In particular, concepts involving DDs incur penalty scores, since the corresponding tableau rules are computationally expensive due to their non-deterministic nature. 
+
+Additionally, there is a mechanism for selecting the concept to expand in the case of a non-deterministic rules, based on syntactic features. Each concept is assigned a score determined by its size and the types of constructors it contains. In particular, concepts involving DDs incur penalty scores, since the corresponding tableau rules are computationally expensive due to their non-deterministic nature. 
 
 Note that in the current implementation "use_absorption" and "use_foldable_TBox" have to be both True or both False, and similarly, "use_SAT_optimisations" and "use_add_disj_optimisations" have to be both True or both False. Below is an example of input that "turns on" the two latter optimisations:
 ```
 tab = DL_Tableau(ontology = 'ontology_file.owl', 
                  flexible_syntax = True,
-                 use_SAT_optimisations = True,
-                 use_add_disj_optimisations = True)
+                 use_SAT_optimisations = True)
+```
+
+
+
+## Parsing and building tableau for formulas of multi-modal logic K
+
+OWLeDD also contains a parser for formulas of multi-modal logic K, which is equivalen to ALC. Of course, also in this case you can use definite descriptions in the formulas. The syntactic conventions are different, and are consistent with conventions used in modal logic.
+
+### Entering concepts using the default parsing mode
+
+Like in case of description logic, the modal logic parser allows using two types of syntax:
+
+- Atoms have to start with either of the letters "p,q,r,s,t" after which 0 or more numbers can be placed. For example:
+  - `'p'`
+  - `'q1'`
+  - `'t23'`
+- Negation of a concept can be built using either of the symbols `~` or `¬`. For example:
+  - `'~p'`
+  - `'¬q1'`
+- Conjunction of two concepts can be built using either of the symbols `&` or `∧`. For example:
+  - `'p & s1'`
+  - `'q ∧ r'`
+- Disjunction of two concepts can be built using either of the symbols `|` or `∨`. For example:
+  - `'p | s'`
+  - `'t1 ∨ (p ∧ r)'`
+- Implication can be built using the string of symbols "->" or the symbol "→". For example:
+  - `'p -> r'` 
+  - `'t11 → s'`
+- Modalities should be introduced using the symbols `'[..]'` for necessity and `'<..>'` for possibility. In between those symbols a non-empty alphanumeric string has to appear, that corresponds to the type of modality. Next comes a formula that is connected with the modal operator.
+\
+\
+  - `'[1]p -> <1>q'`
+  - `'p -> [knows]p'`
+  - `'<1>[2]q2 & ~[1](p->q2)'`
+- Global descriptions are built in a similar way as for description logic, but using the symbol `'@'` instead of `'i'` or `'ι'` (following the convention taken in papers on hybrid logic).
+\
+\
+`[@] [Formula1] [.] [Formula2]`
+\
+\
+For example:
+  - `'@ p.q'`
+  - `'~@ p2.(q -> [1]q)'`
+
+Note that when parsing formulas of multi-modal logic K, ABox, TBox and RBox are not used. The main argument is `'formula'` instead of `'concept'`, and one can only choose the SAT-based optimisations. The initialised class is `'ML_Tableau'` instead of `'DL_Tableau'`. For example: 
+```
+tab = ML_Tableau(formula = ['@p.q', 'r -> p'],   
+                 use_SAT_optimisations = True)
 ```
 
 
 ## Short description of available scripts
 
-### tableu
+### tableau
 
 This is the main script, which defines the „DL_Tableau” class and builds the tableau using the tableau rules.
 
@@ -224,9 +279,11 @@ This is an additional, technical script. It contains functions for parsing conce
 
 ### TBox_optimisations
 
-This script contains functions that perform TBox optimisations and other necessary functions used in the processing of TBox (e.g. checking if TBox is acyclic or performing basic absorption techniques).
+This script contains functions that perform TBox optimisations and other necessary functions used in the processing of TBox (e.g. checking if TBox is acyclic or performing basic absorption techniques)
 
-### experiments_IJCAR_submission
+### tableau_ml
 
-Script used to perform some experiments with the prover
+This is the main script to use if formulas of multi-modal logic K are to be analysed.
+
+
 
