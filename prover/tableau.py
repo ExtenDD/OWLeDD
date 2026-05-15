@@ -1,23 +1,15 @@
-import os
-
-#PLACE THE PATH TO THE FOLDER WITH SCRIPTS HERE!
-#path = 'C:\\....." 
-path = 'C:\\projekt_UŁ\\python\\FLOC_2026\\github_code'
-
-os.chdir(path)
-
 import forms
-#import rules
 import interpretation
 import add_functions
 import TBox_optimisations
 import rules
 
+
 import re
 import pandas as pd
 from copy import deepcopy
 from itertools import combinations
-
+import time
 
 
 class DL_Tableau:
@@ -34,24 +26,23 @@ class DL_Tableau:
                  use_absorption = True,
                  use_foldable_TBox  = True,
                  use_SAT_optimisations = False,
-                 use_add_disj_optimisations = False):
+                 time_out_limit = None):
         
         self.interpretation = interpretation.Interpretation()  #we initialize the interpretation object
         world_names_str = set()   #set of strings containing world names - a working variable
         self.time_out = False     #attribute that stores the information, if creating the tableau using a function "build_tableu" took more time than the defined limit
-
+        self.parsing_time = 0
 
         if use_absorption == True and use_foldable_TBox == False:
             raise TypeError("Absorption cannot be enabled while division into foldable and unfoldable KBs is disabled")
             
-        if use_add_disj_optimisations == True and use_SAT_optimisations == False:
-            raise TypeError("Additional optimisations for disjunctions cannot be enabled while SAT-based optimisations are disabled ")
-
         #saving the optimisation choices as attrivutes of the interpretation
-        self.interpretation._optimisations = (use_absorption, use_foldable_TBox, use_SAT_optimisations, use_add_disj_optimisations)
+        self.interpretation._optimisations = (use_absorption, use_foldable_TBox, use_SAT_optimisations)
 
         #this object will represent a dependency graph, used to check if TBox is acyclic
         self.graph_Tbox_atoms = dict()
+
+        start_time_parsing = time.time()
 
 
         #1. READ IN AND PARSE THE MAIN ARGUMENTS
@@ -324,6 +315,12 @@ class DL_Tableau:
                         fml_parsed = forms.ToFml().transform(parser_tree)
                         fmls_parsed.append(fml_parsed)
 
+                #check if the concept argument contains subsumptions or equivalences - in description logics they are allowed only in the TBox!
+                for fml in fmls_parsed:
+                    if any(subs_equiv in fml.formula_string() for subs_equiv in ["⊑", "≡"]):
+                        raise TypeError("Subsumptions and equivalences are not allowed in the ABox!")
+
+
                     
                 #check if the individual was already created in an ontology
                 if ontology != None and world in world_names_str:
@@ -360,7 +357,7 @@ class DL_Tableau:
                     pairs_of_worlds=y
 
                 if not isinstance(pairs_of_worlds, list):
-                    raise TypeError("Please insert the information about related worlds as lists of lists of pairs of worlds")  #ERROR!!!!!
+                    raise TypeError("Please insert the information about related worlds as lists of lists of pairs of worlds")
                 else:
                     for pair in pairs_of_worlds:
                         if not (isinstance(pair, list) and len(pair)==2 and isinstance(pair[0],str) and isinstance(pair[1],str)):
@@ -413,7 +410,12 @@ class DL_Tableau:
                     fmls_parsed.append(fml_parsed)
             else:
                 raise TypeError("Please insert a correctly built concept or list of concepts in the argument 'concept'")
-    
+
+            #check if the concept argument contains subsumptions or equivalences - in description logics they are allowed only in the TBox!
+            for fml in fmls_parsed:
+                if any(subs_equiv in fml.formula_string() for subs_equiv in ["⊑", "≡"]):
+                    raise TypeError("Subsumptions and equivalences are not allowed in the concept argument!")
+
 
             #concepts introduced in the "concept" argument are placed in a new individual
             #name the world "w0"; if this name already appearad in ABox or RBox, choose the first availabe from: {"w00", "w000",...}
@@ -435,52 +437,70 @@ class DL_Tableau:
         
         
         
-        #1.5. TBox argument  (to add RBox using pythonic syntax) --
+        #1.5. TBox argument  (to add TBox using pythonic syntax) --
         
         if TBox == None:
             pass
         else:
-            if isinstance(TBox, str):  #single subsumption in the TBox argument
+            if isinstance(TBox, str):  #single subsumption/equivalence in the TBox argument
                 parser_tree = forms.parser_DL.parse(TBox)
                 fml_parsed = forms.ToFml().transform(parser_tree)
-                if not isinstance(fml_parsed, forms.Subsumption): 
-                    raise TypeError("Please enter only subsumptions in the TBox!")
+                if not (isinstance(fml_parsed, forms.Subsumption) or isinstance(fml_parsed, forms.Equivalence)): 
+                    raise TypeError("Please enter only subsumptions or equivalences in the TBox!")
                 fmls_parsed = [fml_parsed]
-            elif isinstance(TBox, list):  #list of subsumptions in the TBox argument
+            elif isinstance(TBox, list):  #list of subsumptions/equivalences in the TBox argument
                 fmls_parsed = []
                 for fml in TBox:
                     parser_tree = forms.parser_DL.parse(fml)
                     fml_parsed = forms.ToFml().transform(parser_tree)
-                    if not isinstance(fml_parsed, forms.Subsumption):#ERROR!!!!!
-                        raise TypeError("Please enter only subsumptions in the TBox!")                    
+                    if not (isinstance(fml_parsed, forms.Subsumption) or isinstance(fml_parsed, forms.Equivalence)):
+                        raise TypeError("Please enter only subsumptions or equivalences in the TBox!")                    
                     fmls_parsed.append(fml_parsed)
             else:
-                raise TypeError("Please insert a subsumption or a list of subsumptions in the TBox argument")    
+                raise TypeError("Please insert a subsumption/equivalence or a list of subsumptions/equivalences in the TBox argument")    
+
 
             #we're applying the TBox rule - changing implications to negation of conjunction
-            fmls_pairs = [(fml.subs[0], fml.subs[1]) for fml in fmls_parsed]
+            for fml in fmls_parsed:
+                if isinstance(fml, forms.Subsumption):
+                    
+                    if isinstance(fml.subs[0], forms.Atom):
+                        self.interpretation._Tbox_fold_subs.update({(fml.subs[0], fml.subs[1])})
+                        left_atom_str = fml.subs[0].formula_string()
+                        right_atoms_str = fml.subs[1].atom_symbols
 
-            for pair in fmls_pairs:                
-                if isinstance(pair[0], forms.Atom):
-                    self.interpretation._Tbox_fold_subs.update({(pair[0], pair[1])})
-                    left_atom_str = pair[0].formula_string()
-                    right_atoms_str = pair[1].atom_symbols
+                        #update the graph of Tbox atoms to be used in checking if Tbox is cyclic
+                        if left_atom_str in self.graph_Tbox_atoms.keys():
+                            self.graph_Tbox_atoms[left_atom_str] = self.graph_Tbox_atoms[left_atom_str].union(set(right_atoms_str))
+                        else:
+                            self.graph_Tbox_atoms.update({left_atom_str: set(right_atoms_str)})
 
-                    #update the graph of Tbox atoms to be used in checking if Tbox is cyclic
-                    if left_atom_str in self.graph_Tbox_atoms.keys():
-                        self.graph_Tbox_atoms[left_atom_str] = self.graph_Tbox_atoms[left_atom_str].union(set(right_atoms_str))
                     else:
-                        self.graph_Tbox_atoms.update({left_atom_str: set(right_atoms_str)})
+                        self.interpretation._Tbox_unfold_subs.update({(fml.subs[0], fml.subs[1])})
+                
+                
+                elif isinstance(fml, forms.Equivalence):
+                    
+                    if isinstance(fml.subs[0], forms.Atom):
+                        self.interpretation._Tbox_fold_eq.update({(fml.subs[0], fml.subs[1])})
+                        left_atom_str = fml.subs[0].formula_string()
+                        right_atoms_str = fml.subs[1].atom_symbols
 
-                else:
-                    self.interpretation._Tbox_unfold_subs.update({(pair[0], pair[1])})
+                        #update the graph of Tbox atoms to be used in checking if Tbox is cyclic
+                        if left_atom_str in self.graph_Tbox_atoms.keys():
+                            self.graph_Tbox_atoms[left_atom_str] = self.graph_Tbox_atoms[left_atom_str].union(set(right_atoms_str))
+                        else:
+                            self.graph_Tbox_atoms.update({left_atom_str: set(right_atoms_str)})
+
+                    else:
+                        self.interpretation._Tbox_unfold_subs.update({(fml.subs[0], fml.subs[1])})
+                        self.interpretation._Tbox_unfold_subs.update({(fml.subs[1], fml.subs[0])})
+                
+         
             
-            del fmls_pairs
             
             
-            
-            
-        #2. PERFORMING NECESSARY TRANSOFMRATIONS OF TBOX (depending on arguments set)
+        #2. PERFORMING NECESSARY TRANSFORMATIONS OF TBOX (depending on arguments set)
         
         
         #2.1. Absorption
@@ -588,8 +608,12 @@ class DL_Tableau:
         del self.graph_Tbox_atoms
         del neg_conjs
 
+
+        end_time_parsing = time.time()
+        self.parsing_time = end_time_parsing - start_time_parsing 
+
             
-        #2.7. setting additional attributes of the interpreataion object
+        #2.7. setting additional attributes of the interpretation object
             
         #store the world names in an attribute of the interpretation
         self.interpretation._world_names_str = world_names_str
@@ -641,6 +665,9 @@ class DL_Tableau:
 
         #initializing the counter of closed branches of the tableau (in which an inconsistency has been found)        
         self.closed_branches_count = 0
+
+        #initializing the runtime counter of the prover
+        self.runtime = 0
         
         #division of concepts/formulas in the formula list in each world of the interpretation into sets of subtypes of formulas
         #note - the attribute "_formulas" of each world will be a dictionary, composed of sets of formulas as values from now on (not a list, as it was the case in the input)
@@ -676,13 +703,27 @@ class DL_Tableau:
 
             del new_fml_negat, new_fml_posit
 
+
+        start_time_tableau = time.time()
+
+
         #initialize the iterator of rules
         rules_iterator = 0
 
         while rules_iterator < no_rules_to_apply:
 
+            runtime_sofar = time.time() - start_time_tableau
+
+            if time_out_limit != None and runtime_sofar > time_out_limit:
+                self.time_out = True
+                self.runtime = runtime_sofar 
+                break
+            
+
+
             #reset the iterator after any rule has been applied
             rules_iterator = 0
+            
 
             for rule in rules_to_apply:  #iterate over the rules 
                 
@@ -704,6 +745,8 @@ class DL_Tableau:
                     self.interpretation = new_interpretation
                     self.no_rules_applied += 1
                     alternative_interpretations.extend(new_alt_interpretations)  #add new "alternative interpretations" to the list - if there are any to add
+                    #print(rule)
+                    #breakpoint()
                     break  
                 else:
                     rules_iterator += 1    #rule has not been applied
@@ -715,21 +758,25 @@ class DL_Tableau:
         #if there are no more rules to apply and the formula is not a time out - it is satisfiable 
         if self.is_satisfiable is None and self.time_out is False and rules_iterator == no_rules_to_apply:
             self.is_satisfiable = True
+        elif self.time_out is True:
+            self.is_satisfiable = None
             
-            
+        
+        end_time_tableau = time.time()
+        self.runtime = end_time_tableau - start_time_tableau 
 
 #Other functions to apply on the DL_Tableau object (after applying the rules) ------------------------
 
 
     def print_interpretation(self):
-        """print interpretation in a text form - this version prints only atoms satisfied in the worlds"""
+        """print interpretation in a text form - this version prints only atoms satisfied in the worlds/individuals"""
         #note - the interpretation should not be considered as a proper model 
         
-        #print world names and atoms satisfied in the worlds
+        #print world/individuals names and atoms satisfied in them
         if self.flexible_syntax == True:
             for w in self.interpretation.worlds():
                 
-                print(f"World name: {w._world_name_str} \n Concepts:")
+                print(f"Individual name: {w._world_name_str} \n Concepts:")
                 
                 for fml in (w._formulas['atoms']):
                         
@@ -751,11 +798,10 @@ class DL_Tableau:
                     
                 print("\n")
 
-            
         else:
             for w in self.interpretation.worlds():
                 
-                print(f"World name: {w._world_name_str} \n Concepts:")
+                print(f"Individual name: {w._world_name_str} \n Concepts:")
                 for fml in (w._formulas['atoms'] | w._formulas['neg_atoms']):
                     print("  ", fml)  #print the formulas in "nice" looking form
                 print("\n")
@@ -763,23 +809,50 @@ class DL_Tableau:
         #print relations between worlds
         for v1, w  in self.interpretation._outgoing.items():
             if bool(w): #don't take into account worlds with no outging edges (bool(w) = dictionary w is not empty)
-                for v2, mod_types in w.items():
-                    for mod_type in mod_types:
-                        print(f"Modality type: {mod_type} \n Source world: {v1._world_name_str} \n Target world: {v2._world_name_str} \n")
+                for v2, roles in w.items():
+                    for role in roles:
+                        print(f"Role type: {role} \n Source Individual: {v1._world_name_str} \n Target Individual: {v2._world_name_str} \n")
+
+        #print roles that were "frozen" due to the blocking rule for existential restriction
+        for w in self.interpretation.worlds():
+            #print(w._candidates_blocking)
+            if bool(w._candidates_blocking):
+                for cand_world, roles_dict in w._candidates_blocking.items():
+                    for role in roles_dict.keys():
+                        print(f"Role type: {role} \n Source Individual: {w._world_name_str} \n Target Individual: {cand_world._world_name_str} \n")
+                
+
+        #print which individuals/world should be unified (as a consequence of using local_description_rule_2)      
+        if len(self.interpretation._worlds_to_unify) >0:
+            print("Sets of individuals to unify:")
+            for world_set in self.interpretation._worlds_to_unify:
+                print(world_set, "\n")
+
 
 
     def nodes_count(self):
         """ print the number of nodes in the tableau"""
         return(self.no_rules_applied + 1)
 
+
     def branches_count(self):
         """ print the number of branches in the tableau"""
-        return(self.closed_branches_count + 1 if self.is_satisfiable else self.closed_branches_count)
+        if self.is_satisfiable == True or self.time_out == True:
+            return (self.closed_branches_count + 1)
+        elif self.is_satisfiable == False: 
+            return (self.closed_branches_count)
+
 
     def satisfiability_check(self):
-        return("Input satisfiable" if self.is_satisfiable else "Input unsatisfiable")
-    
-    
+        if self.is_satisfiable == True:
+            return ("Input satisfiable")
+        elif self.time_out == True:
+            return ("Time out: satisfiability not determined")
+        elif self.is_satisfiable == False: 
+            return ("Input unsatisfiable")
+
+    def execution_time(self):
+        print(f"Tableau runtime: {self.runtime} \n Parsing time: {self.parsing_time} \n")
     
 
 
