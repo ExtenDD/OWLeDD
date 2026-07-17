@@ -32,16 +32,17 @@ def choose_fml_to_branch_on(interpretation, w, fml1, fml2):
     Arguments: 
         interpretation: current interpretation
         w: current world/individual
-        fml1: 
+        fml1: first formula (option one in the non-deterministic rule)
+        fml2: second formula (option two in the non-deterministic rule) 
     
     """
     
     if isinstance(fml1, forms.Negation) and isinstance(fml1.sub, forms.Diamond) and len(interpretation.related_worlds(w, fml1.sub.role))==0: #if a concept/formula is an universal restriction ("box"), and there are no world/individuals connected by the associated role, put this concept/formula on the branch first
-            first_formula = fml1
-            second_formula = fml2
+        first_formula = fml1
+        second_formula = fml2
     elif isinstance(fml2, forms.Negation) and isinstance(fml2.sub, forms.Diamond) and len(interpretation.related_worlds(w, fml2.sub.role))==0:
-            first_formula = fml2
-            second_formula = fml1
+        first_formula = fml2
+        second_formula = fml1
     elif fml2.complexity_score() > fml1.complexity_score():  #otherwise, use the complexity score (as defined in the script "forms") to decide which concept/formula should be put on the branch first
         first_formula = fml1
         second_formula = fml2
