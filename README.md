@@ -19,7 +19,6 @@ Installation:
 pip install OWLeDD
 ```
 
-
 ## What are definite descriptions?
 
 Definite descriptions (DDs) are expressions of the form "the *X* such that *P(X)*", which allow one to refer to objects by means of their unique properties. 
@@ -48,7 +47,7 @@ The input can contain any subset of those 5 main arguments. Below we explain how
 
 ## Parsing
 
-OWLeDD contains a parser for description logic concepts and OWL ontologies, which has been created using the library [lark](https://github.com/lark-parser/lark).
+OWLeDD contains a parser for description logic concepts and OWL ontologies, which has been created using the library [Lark](https://github.com/lark-parser/lark).
 There are two parsing modes. In the first mode, only restricted syntax can be introduced. This is default, and can be used for any types of input.
 The second mode is reserved for the situation, in which the input contains an ontology which contains concepts and roles expressed in any other type of syntax. We describe 
 both modes below.
@@ -110,9 +109,9 @@ For example:
 Names of individuals can be any strings of symbols. 
 
 
-### Building a simple ontology using a Pythonic syntax
+### Building a simple ontology using the Pythonic syntax
 
-You can check satisfiability of concepts or build a simple ontology from a code editor using a Pythonic syntax. To do that, initalize a DL_Tableau object with any of the 4 arguments as described below:
+You can check satisfiability of concepts or build a simple ontology from a code editor using the Pythonic syntax. To do that, initalize a DL_Tableau object with any of the 4 arguments as described below:
 
 1. concept: this can be a concept or a list of concepts, for example:
     - `concept = 'A'`
@@ -131,7 +130,7 @@ Notes:
 - ABox statements are analogical to OWL "ClassAssertion" statements. However, concepts introduced in the "concept" argument are assumed to be satisfied in a new individual, not occuring in any other argument of DL_Tableau.
 - if you just use the "concept" argument, you are effectively testing satisfiability of single ALC concept (note that this is equivalent to testing satisfiability of multi-modal logic formulas, just the syntax is different)
 - "RBox" stands for what usually is considered a part of ABox  - "ObjectPropertyAssertion" OWL statements.
-- using "TBox" you can OWL statements of the types "SubClassOf" and "Equivalence" 
+- using "TBox" you can enter OWL statements of the types "SubClassOf" and "Equivalence" 
 
 Here is another example of a complete input with all the 4 arguments:
 ```
@@ -254,6 +253,8 @@ tab = ML_Tableau(formula = ['@p.q', 'r -> p'],
 ```
 
 
+
+
 ## Short description of available scripts
 
 ### tableau
@@ -284,6 +285,4 @@ This script contains functions that perform TBox optimisations and other necessa
 ### tableau_ml
 
 This is the main script to use if formulas of multi-modal logic K are to be analysed.
-
-
 
