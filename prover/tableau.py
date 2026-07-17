@@ -755,7 +755,7 @@ class DL_Tableau:
                 break  #out of the whole while loop
 
 
-        #if there are no more rules to apply and the formula is not a time out - it is satisfiable 
+        #if there are no more rules to apply and there is no time out - it is satisfiable 
         if self.is_satisfiable is None and self.time_out is False and rules_iterator == no_rules_to_apply:
             self.is_satisfiable = True
         elif self.time_out is True:
