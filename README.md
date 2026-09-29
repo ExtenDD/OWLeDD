@@ -19,6 +19,7 @@ Installation:
 pip install OWLeDD
 ```
 
+
 ## What are definite descriptions?
 
 Definite descriptions (DDs) are expressions of the form "the *X* such that *P(X)*", which allow one to refer to objects by means of their unique properties. 
@@ -69,18 +70,17 @@ For convenience, the parser allows using both description logic "square" syntax,
 - Disjunction of two concepts can be built using either of the symbols `|` or `⊔`. For example:
   - `'F | R1'`
   - `'Tall ⊔ Pretty'`
-- Subsumption of two concept can be built using the string of symbols "->" or the symbol "⊑". For example:
+- Subsumption of two concept can be built using the string of symbols `->` or the symbol `⊑`. For example:
   - `'A -> B'`
   - `'Flower ⊑ ~Man'`
-- Equivalence of two concept can be built using the string of symbols "<->" or the symbol "≡". For example:
+- Equivalence of two concept can be built using the string of symbols `<->` or the symbol `≡`. For example:
   - `'C ≡ B'`
   - `'Student <-> (Male | Female) & Attends_course'`
 - The existential quantifier can be built either using the symbol `Ǝ` or the string of symbols `*E`. The general quantifier can be built either using the symbol `∀` or the string of symbols `*A`. Roles have to start with small letters, followed by capital letters, small letters, digits or the symbol `_` (as with concepts, they can also be preceded by the symbol ":"). The whole concept consists of three parts that have to be put in the following order, with spaces between them:
 \
 \
 `[quantifier] [role] [concept]`
-\
-\
+
   - `'*E role_1 A'`
   - `'Ǝ r R5'`
   - `'∀ :likes Tall'`
@@ -103,8 +103,7 @@ For example:
 For example:
   - `'i.Rich'`
   - `'~ι.XaV'`
-\
-\
+
 
 Names of individuals can be any strings of symbols. 
 
@@ -124,18 +123,18 @@ You can check satisfiability of concepts or build a simple ontology from a code 
     - `RBox = {'likes': [['Tom', 'Ann'], ['Al', 'Mary']], 'loves' : ['Tom', 'Mary']}`
 4. TBox: this should be a subsumption of two concepts or a list of subsumptions, for example:
     - `TBox = 'A -> B'`
-    - `TBox = ['Tall' -> 'Pretty', 'Smart' -> 'Rich']`
+    - `TBox = ['Tall -> Pretty', 'Smart -> Rich']`
 
 Notes:
-- ABox statements are analogical to OWL "ClassAssertion" statements. However, concepts introduced in the "concept" argument are assumed to be satisfied in a new individual, not occuring in any other argument of DL_Tableau.
+- "ABox" statements correspond to OWL "ClassAssertion" statements. However, concepts introduced in the "concept" argument are assumed to be satisfied in a new individual, not occuring in any other argument of DL_Tableau.
 - if you just use the "concept" argument, you are effectively testing satisfiability of single ALC concept (note that this is equivalent to testing satisfiability of multi-modal logic formulas, just the syntax is different)
-- "RBox" stands for what usually is considered a part of ABox  - "ObjectPropertyAssertion" OWL statements.
+- "RBox" stands for what usually is considered a part of "ABox", corresponding to "ObjectPropertyAssertion" OWL statements.
 - using "TBox" you can enter OWL statements of the types "SubClassOf" and "Equivalence" 
 
 Here is another example of a complete input with all the 4 arguments:
 ```
 tab = DL_Tableau(concept = ['C1 ⊓ :T', 'i C2.C3'],
-                 ABox = {'Robert': ''*A role1 S2''},
+                 ABox = {'Robert': '*A role1 S2'},
                  RBox = {'role2': ['ind1', 'ind2']},
                  TBox = ['C1 ⊑ C2&C5'])
 ```
@@ -144,7 +143,7 @@ tab = DL_Tableau(concept = ['C1 ⊓ :T', 'i C2.C3'],
 
 ### Loading an ontology from a file 
 
-You can load an ontology from an "owl" file, using the "ontology" argument. At the moment, OWLeDD accepts only ontologies in functional syntax and with a limited number of OWL constructs:
+You can load an ontology from an OWL file, using the "ontology" argument. At the moment, OWLeDD accepts only ontologies in functional syntax and with a limited number of OWL constructs:
 
 - Declaration (of a Class, ObjectProperty and NamedIndividual)
 - ClassAssertion
@@ -171,9 +170,9 @@ ontology. If the input turns out to be satisfiable, the ontology allows models i
 
 ## Functionalities of the prover 
 
-### Main functions on the "DL_Tableau" object
+### Main methods of the "DL_Tableau" class
 
-If you save the initialized DL_Tableau object in a variable, you can access various types of information that are saved as attributes of that object, or using functions on the object. Here is the list (we take it that the tableau is saved in the variable "tab", as in the previous examples):
+If you save the initialized DL_Tableau object in a variable, you can access various types of information that are saved as attributes of that object, or using methods of the "DL_Tableau" class. Here is the list of the methods (we take it that the tableau is saved in the variable "tab", as in the previous examples):
 
 **tab.satisfiability_check()**: outputs True/False, indicating if the input is satisfiable.
 
@@ -253,8 +252,6 @@ tab = ML_Tableau(formula = ['@p.q', 'r -> p'],
 ```
 
 
-
-
 ## Short description of available scripts
 
 ### tableau
@@ -283,6 +280,9 @@ This is an additional, technical script. It contains functions for parsing conce
 This script contains functions that perform TBox optimisations and other necessary functions used in the processing of TBox (e.g. checking if TBox is acyclic or performing basic absorption techniques)
 
 ### tableau_ml
+
+This is the main script to use if formulas of multi-modal logic K are to be analysed.
+
 
 This is the main script to use if formulas of multi-modal logic K are to be analysed.
 
