@@ -40,7 +40,7 @@ tab = DL_Tableau(ontology = 'ontology_file.owl',
                          'Ana': ['Woman', 'i.Friendly']},
                  RBox = {'neighbour': ['Ana', 'Robert']},
                  TBox = ['Student ⊑ Smart',
-                         'Nice ≡ Polite ⊓ Friendly]))
+                         'Nice ≡ Polite ⊓ Friendly'])
 ```
 
 When a DL_Tableau object is initialised, a tableau is built and the user can access various types of information about it.
