@@ -113,7 +113,7 @@ Note, that in absense of parenthesis right-associativity is assumed. For example
 
 
 
-## Definite descriptions revisited
+### Definite descriptions revisited
 
 As an illustration and explanation of how definite descriptions can be used, let us come back to the first example of the ontology given above: the concept 'i John.Teacher' expresses the fact that a single individual belongs to the extension of the concept "John", and this individual also belongs to the extension of the concept "Teacher". Note that this is a global requirement (hence the name - global description), that is, at the point of creating the ontology it is not determined which particular individual it is. Note that from '~ i John.Teacher' it intuitively follows that either of the following three facts hold: 1) no individual belongs to the extension of 'John', 2) more than one individual belong to the extension of 'John', 3) a single individual belongs to the extension of 'John', but it does not belong to the extension of 'Teacher'. On the other hand, local descriptions - like 'i.Friendly' from the example -  express the fact that a specified individual (here - 'Ana') is the only one, which belongs to the extension of a given concept. In this case '~ i.Friendly' would indicate one of the following: 1) the specified individual ('Ana') belongs to the extension of the concept '~Friendly', 2) there are at least two individuals which belong to the extension of 'Friendly'.
 
