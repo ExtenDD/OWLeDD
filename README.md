@@ -34,11 +34,13 @@ Starting the prover comes down to initialising an instance of the DL_Tableau cla
 
 ```
 tab = DL_Tableau(ontology = 'ontology_file.owl',
-                 concept = ['Ǝ isStudentOf John', 'i John.Teacher'],
+                 concept = ['Ǝ isStudentOf John',
+						    'i John.Teacher'],
                  ABox = {'Robert': 'Man ⊓ Polite',
-			 'Ana': ['Woman', 'i.Friendly']},
+                         'Ana': ['Woman', 'i.Friendly']},
                  RBox = {'neighbour': ['Ana', 'Robert']},
-                 TBox = ['Student ⊑ Smart', 'Nice ≡ Polite ⊓ Friendly]))
+                 TBox = ['Student ⊑ Smart',
+                         'Nice ≡ Polite ⊓ Friendly]))
 ```
 
 When a DL_Tableau object is initialised, a tableau is built and the user can access various types of information about it.
