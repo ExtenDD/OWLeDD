@@ -34,10 +34,11 @@ Starting the prover comes down to initialising an instance of the DL_Tableau cla
 
 ```
 tab = DL_Tableau(ontology = 'ontology_file.owl',
-                 concept = ['Student ⊓ Tall', 'i.Bob', 'Ǝ isStudentOf John'],
-                 ABox = {'Robert': 'Man'},
+                 concept = ['Ǝ isStudentOf John', 'i John.Teacher'],
+                 ABox = {'Robert': 'Man ⊓ Polite',
+			 'Ana': ['Woman', 'i.Friendly']},
                  RBox = {'neighbour': ['Ana', 'Robert']},
-                 TBox = ['Student ⊑ Man']))
+                 TBox = ['Student ⊑ Smart', 'Nice ≡ Polite ⊓ Friendly]))
 ```
 
 When a DL_Tableau object is initialised, a tableau is built and the user can access various types of information about it.
@@ -108,6 +109,16 @@ For example:
 Names of individuals can be any strings of symbols. 
 
 
+Note, that in absense of parenthesis right-associativity is assumed. For example, 'A ⊑ B ⊑ C' is parsed as 'A ⊑ (B ⊑ C)'. Note also, that conjunction and disjunction are not implemented as having higher precedence than subsumption, so 'A Π B ⊑ C' is parsed as 'A Π (B ⊑ C)'.
+
+
+
+## Definite descriptions revisited
+
+As an illustration and explanation of how definite descriptions can be used, let us come back to the first example of the ontology given above: the concept 'i John.Teacher' expresses the fact that a single individual belongs to the extension of the concept "John", and this individual also belongs to the extension of the concept "Teacher". Note that this is a global requirement (hence the name - global description), that is, at the point of creating the ontology it is not determined which particular individual it is. Note that from '~ i John.Teacher' it intuitively follows that either of the following three facts hold: 1) no individual belongs to the extension of 'John', 2) more than one individual belong to the extension of 'John', 3) a single individual belongs to the extension of 'John', but it does not belong to the extension of 'Teacher'. On the other hand, local descriptions - like 'i.Friendly' from the example -  express the fact that a specified individual (here - 'Ana') is the only one, which belongs to the extension of a given concept. In this case '~ i.Friendly' would indicate one of the following: 1) the specified individual ('Ana') belongs to the extension of the concept '~Friendly', 2) there are at least two individuals which belong to the extension of 'Friendly'.
+
+
+
 ### Building a simple ontology using the Pythonic syntax
 
 You can check satisfiability of concepts or build a simple ontology from a code editor using the Pythonic syntax. To do that, initalize a DL_Tableau object with any of the 4 arguments as described below:
@@ -152,7 +163,7 @@ You can load an ontology from an OWL file, using the "ontology" argument. At the
 - EquivalentClasses
 - DisjointClasses
 
-If concept and role names do not conform to the parsing conventions named above, you need to set an additional argument "flexible_syntax" to "True" when creating a DL_Tableu. In this case, the parser accepts any non-space string of symbols (an exception are the parenthesis symbols "(" and ")" - using them inside concept, role or individual names will likely cause paring errors). Here is an example of such input:
+If concept and role names do not conform to the parsing conventions named above, you need to set an additional argument "flexible_syntax" to "True" when creating a DL_Tableu. In this case, the parser accepts any non-space string of symbols as concept, role and individual names  (an exception are the parenthesis symbols "(" and ")" - using them inside concept, role or individual names will likely cause paring errors). Here is an example of such input:
 ```
 tab = DL_Tableau(ontology = 'ontology_file.owl',
                  flexible_syntax = True)
@@ -165,14 +176,14 @@ tab = DL_Tableau(ontology = 'ontology_file.owl',
                  flexible_syntax = True)
 ```
 In this particular application, we are checking the satisfiability of a local definite description with respect to the 
-ontology. If the input turns out to be satisfiable, the ontology allows models in which the concept 'A' has singular extension.
+ontology. If the input turns out to be satisfiable, the ontology allows models in which the concept 'A' has a singular extension.
 
 
 ## Functionalities of the prover 
 
 ### Main methods of the "DL_Tableau" class
 
-If you save the initialized DL_Tableau object in a variable, you can access various types of information that are saved as attributes of that object, or using methods of the "DL_Tableau" class. Here is the list of the methods (we take it that the tableau is saved in the variable "tab", as in the previous examples):
+If you save the initialized DL_Tableau object in a variable, you can access various types of information that are saved as attributes of that object, or using methods of the "DL_Tableau" class. Here is the list of those methods (we take it that the tableau is saved in the variable "tab", as in the previous examples):
 
 **tab.satisfiability_check()**: outputs True/False, indicating if the input is satisfiable.
 
@@ -282,6 +293,14 @@ This script contains functions that perform TBox optimisations and other necessa
 ### tableau_ml
 
 This is the main script to use if formulas of multi-modal logic K are to be analysed.
+
+
+
+
+
+
+
+
 
 
 This is the main script to use if formulas of multi-modal logic K are to be analysed.
